@@ -33,19 +33,40 @@ export const FloatingParticles = () => {
             opacity: 0;
           }
           10% {
-            opacity: var(--tw-opacity);
+            opacity: 0.3;
           }
           90% {
-            opacity: var(--tw-opacity);
+            opacity: 0.3;
           }
           100% {
-            transform: translateY(-110vh) translateX(${Math.random() * 200 - 100}px) scale(1.5);
+            transform: translateY(-110vh) translateX(100px) scale(1.5);
             opacity: 0;
           }
         }
 
-        .animate-float-up {
+        @keyframes float-up-left {
+          0% {
+            transform: translateY(0) translateX(0) scale(1);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.3;
+          }
+          90% {
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateY(-110vh) translateX(-80px) scale(1.5);
+            opacity: 0;
+          }
+        }
+
+        .animate-float-up:nth-child(odd) {
           animation: float-up linear infinite;
+        }
+
+        .animate-float-up:nth-child(even) {
+          animation: float-up-left linear infinite;
         }
       `}</style>
     </div>

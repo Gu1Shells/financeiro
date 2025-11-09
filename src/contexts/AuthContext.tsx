@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  error: string | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -25,28 +26,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Session error:', error);
-        supabase.auth.signOut();
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
+    let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
-        setLoading(false);
+    const initAuth = async () => {
+      try {
+        timeoutId = setTimeout(() => {
+          if (mounted && loading) {
+            console.error('Auth initialization timeout');
+            setError('Timeout ao conectar. Verifique sua conexão.');
+            setLoading(false);
+          }
+        }, 10000);
+
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        clearTimeout(timeoutId);
+
+        if (!mounted) return;
+
+        if (error) {
+          console.error('Session error:', error);
+          await supabase.auth.signOut({ scope: 'local' });
+          setUser(null);
+          setProfile(null);
+          setError(null);
+          setLoading(false);
+          return;
+        }
+
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        if (mounted) {
+          setError('Erro ao inicializar autenticação');
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       (() => {
+        if (!mounted) return;
+
         setUser(session?.user ?? null);
         if (session?.user) {
           loadProfile(session.user.id);
@@ -57,7 +91,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadProfile = async (userId: string) => {
@@ -113,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, error, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

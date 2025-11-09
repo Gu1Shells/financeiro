@@ -64,10 +64,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setLoading(false);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Auth initialization error:', err);
         if (mounted) {
-          setError('Erro ao inicializar autenticação');
+          let errorMessage = 'Erro ao conectar ao servidor';
+
+          if (err?.message?.includes('fetch') || err?.message?.includes('Failed to fetch')) {
+            errorMessage = 'Não foi possível conectar ao servidor. Verifique se há bloqueadores de anúncios ou extensões bloqueando a conexão.';
+          } else if (err?.message?.includes('CORS')) {
+            errorMessage = 'Erro de CORS. O servidor pode estar com problemas de configuração.';
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+
+          setError(errorMessage);
           setUser(null);
           setProfile(null);
           setLoading(false);

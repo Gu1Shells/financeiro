@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LoginForm } from './LoginForm';
 import { SignUpForm } from './SignUpForm';
+import { FloatingCards } from './FloatingCards';
 import { Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -26,10 +27,12 @@ export const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10" />
 
-      <div className="w-full max-w-6xl flex items-center justify-center gap-12">
+      <FloatingCards />
+
+      <div className="w-full max-w-6xl flex items-center justify-center gap-12 relative z-10">
         <div className="hidden lg:flex flex-col items-center justify-center flex-1">
           <div className="bg-white p-6 rounded-3xl shadow-2xl mb-8">
             {companyLogo ? (

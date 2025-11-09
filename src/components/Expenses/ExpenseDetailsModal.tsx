@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2 } from 'lucide-react';
+import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet } from 'lucide-react';
 import { supabase, Expense, InstallmentPayment, PaymentContribution, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { DeleteExpenseModal } from './DeleteExpenseModal';
@@ -10,11 +10,18 @@ interface ExpenseDetailsModalProps {
   onUpdate: () => void;
 }
 
+interface PaymentMethod {
+  id: string;
+  name: string;
+  icon: string;
+}
+
 export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetailsModalProps) => {
   const { user } = useAuth();
   const [installments, setInstallments] = useState<InstallmentPayment[]>([]);
   const [contributions, setContributions] = useState<Record<string, PaymentContribution[]>>({});
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [paymentModal, setPaymentModal] = useState<{
@@ -29,7 +36,7 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
   const loadData = async () => {
     setLoading(true);
     try {
-      const [installmentsRes, contributionsRes, profilesRes] = await Promise.all([
+      const [installmentsRes, contributionsRes, profilesRes, methodsRes] = await Promise.all([
         supabase
           .from('installment_payments')
           .select('*')
@@ -48,10 +55,12 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
             ).data?.map((i) => i.id) || []
           ),
         supabase.from('profiles').select('*'),
+        supabase.from('payment_methods').select('id, name, icon').eq('is_active', true),
       ]);
 
       setInstallments(installmentsRes.data || []);
       setProfiles(profilesRes.data || []);
+      setPaymentMethods(methodsRes.data || []);
 
       const contribsByInstallment: Record<string, PaymentContribution[]> = {};
       (contributionsRes.data || []).forEach((contrib) => {
@@ -129,6 +138,37 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
               </div>
             </div>
 
+            {(expense as any).down_payment_amount > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  Informações de Pagamento
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-blue-700 font-medium mb-1">Entrada</p>
+                    <p className="text-blue-900 font-semibold">
+                      R$ {Number((expense as any).down_payment_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-blue-600 text-xs mt-1">
+                      {(expense as any).down_payment_installments}x de R${' '}
+                      {(Number((expense as any).down_payment_amount) / (expense as any).down_payment_installments).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-blue-700 font-medium mb-1">Restante</p>
+                    <p className="text-blue-900 font-semibold">
+                      R$ {(Number(expense.total_amount) - Number((expense as any).down_payment_amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-blue-600 text-xs mt-1">
+                      {expense.installments}x de R${' '}
+                      {((Number(expense.total_amount) - Number((expense as any).down_payment_amount)) / expense.installments).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
@@ -142,24 +182,43 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
                   const config = statusConfig[installment.status];
                   const Icon = config.icon;
 
+                  const paymentMethod = paymentMethods.find(m => m.id === (installment as any).payment_method_id);
+                  const isDownPayment = (installment as any).is_down_payment;
+
                   return (
                     <div
                       key={installment.id}
-                      className="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-emerald-200 transition"
+                      className={`rounded-xl p-4 border-2 transition ${
+                        isDownPayment
+                          ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
+                          : 'bg-gray-50 border-gray-200 hover:border-emerald-200'
+                      }`}
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="bg-white w-10 h-10 rounded-lg flex items-center justify-center font-bold text-emerald-600 border-2 border-emerald-200">
+                          <div className={`bg-white w-10 h-10 rounded-lg flex items-center justify-center font-bold border-2 ${
+                            isDownPayment ? 'text-emerald-600 border-emerald-300' : 'text-blue-600 border-blue-200'
+                          }`}>
                             {installment.installment_number}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-800">
-                              Parcela {installment.installment_number} de {expense.installments}
+                            <p className="font-semibold text-gray-800 flex items-center gap-2">
+                              {isDownPayment && <Wallet className="w-4 h-4 text-emerald-600" />}
+                              Parcela {installment.installment_number}
+                              {isDownPayment && <span className="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">Entrada</span>}
                             </p>
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(installment.due_date).toLocaleDateString('pt-BR')}
-                            </p>
+                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(installment.due_date).toLocaleDateString('pt-BR')}
+                              </span>
+                              {paymentMethod && (
+                                <span className="flex items-center gap-1">
+                                  <CreditCard className="w-4 h-4" />
+                                  {paymentMethod.name}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">

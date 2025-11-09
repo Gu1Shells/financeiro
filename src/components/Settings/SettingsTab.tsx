@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Building2, Users, Camera, Save, X, Link as LinkIcon, Moon, Sun } from 'lucide-react';
+import { Upload, Building2, Users, Camera, Save, X, Link as LinkIcon, Moon, Sun, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -24,6 +24,9 @@ export const SettingsTab = () => {
   const [logoUrlInput, setLogoUrlInput] = useState('');
   const [showLogoUrlInput, setShowLogoUrlInput] = useState(false);
   const [profileUrlInputs, setProfileUrlInputs] = useState<Record<string, string>>({});
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetStep, setResetStep] = useState(1);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -218,6 +221,28 @@ export const SettingsTab = () => {
     }
   };
 
+  const handleResetSystem = async () => {
+    setResetting(true);
+    try {
+      await supabase.from('payment_contributions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('installment_edit_history').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('installment_payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('expense_deletion_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('audit_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+      alert('Sistema zerado com sucesso! Todos os dados financeiros foram removidos.');
+      setShowResetModal(false);
+      setResetStep(1);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error resetting system:', error);
+      alert('Erro ao zerar o sistema. Tente novamente.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -236,18 +261,18 @@ export const SettingsTab = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-lg">
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-lg">
               {isDarkMode ? <Moon className="w-6 h-6 text-white" /> : <Sun className="w-6 h-6 text-white" />}
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-800 dark:text-white">Tema Escuro</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Preferência pessoal de visualização</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Preferência pessoal de visualização</p>
             </div>
           </div>
           <button
             onClick={toggleDarkMode}
-            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-              isDarkMode ? 'bg-purple-600' : 'bg-gray-300'
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+              isDarkMode ? 'bg-blue-600' : 'bg-gray-300'
             }`}
           >
             <span
@@ -436,7 +461,7 @@ export const SettingsTab = () => {
                 </div>
 
                 <h4 className="font-bold text-gray-800 dark:text-white text-center">{profile.full_name}</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{profile.email}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{user?.id === profile.id ? profile.id : ''}</p>
 
                 {uploadingProfile === profile.id ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent"></div>
@@ -466,6 +491,118 @@ export const SettingsTab = () => {
           ))}
         </div>
       </div>
+
+      <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl shadow-md border-2 border-red-200 dark:border-red-800 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-gradient-to-br from-red-500 to-orange-600 p-3 rounded-lg">
+            <Trash2 className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-red-900 dark:text-red-300">Zona de Perigo</h3>
+            <p className="text-sm text-red-700 dark:text-red-400">Ações irreversíveis do sistema</p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-red-300 dark:border-red-700 p-4">
+          <h4 className="font-bold text-gray-800 dark:text-white mb-2">Zerar Sistema</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Remove TODAS as despesas, parcelas, pagamentos e logs de auditoria. Esta ação é permanente e não pode ser desfeita.
+            Use apenas se quiser recomeçar do zero.
+          </p>
+          <button
+            onClick={() => setShowResetModal(true)}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-orange-700 transition flex items-center gap-2"
+          >
+            <Trash2 className="w-5 h-5" />
+            Zerar Todo o Sistema
+          </button>
+        </div>
+      </div>
+
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                  <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                    {resetStep === 1 ? 'Confirmar Exclusão' : 'Última Confirmação'}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Etapa {resetStep} de 2</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {resetStep === 1 ? (
+                <>
+                  <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                    <p className="text-red-900 dark:text-red-300 font-semibold mb-2">⚠️ ATENÇÃO</p>
+                    <p className="text-sm text-red-800 dark:text-red-400">
+                      Esta ação irá remover permanentemente:
+                    </p>
+                    <ul className="text-sm text-red-800 dark:text-red-400 list-disc list-inside mt-2 space-y-1">
+                      <li>Todas as despesas</li>
+                      <li>Todas as parcelas</li>
+                      <li>Todos os pagamentos</li>
+                      <li>Todo o histórico de edições</li>
+                      <li>Todos os logs de auditoria</li>
+                    </ul>
+                  </div>
+                  <p className="text-gray-700 dark:text-gray-300 mb-6">
+                    Tem certeza que deseja continuar? Esta ação NÃO pode ser desfeita.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white rounded-lg p-6 mb-4 text-center">
+                    <AlertTriangle className="w-16 h-16 mx-auto mb-3" />
+                    <p className="font-bold text-lg mb-2">ÚLTIMA CHANCE!</p>
+                    <p className="text-sm opacity-90">
+                      Todos os dados financeiros serão perdidos permanentemente.
+                    </p>
+                  </div>
+                  <p className="text-gray-700 dark:text-gray-300 mb-6 text-center font-semibold">
+                    Você realmente tem certeza absoluta?
+                  </p>
+                </>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowResetModal(false);
+                    setResetStep(1);
+                  }}
+                  disabled={resetting}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                {resetStep === 1 ? (
+                  <button
+                    onClick={() => setResetStep(2)}
+                    className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
+                  >
+                    Continuar
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleResetSystem}
+                    disabled={resetting}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-700 text-white rounded-lg font-semibold hover:from-red-700 hover:to-orange-800 transition disabled:opacity-50"
+                  >
+                    {resetting ? 'Zerando...' : 'SIM, ZERAR TUDO'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

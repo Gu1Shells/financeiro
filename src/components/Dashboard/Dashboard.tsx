@@ -7,7 +7,7 @@ import { PaidExpensesTab } from '../Expenses/PaidExpensesTab';
 import { ReportsTab } from '../Reports/ReportsTab';
 import { MembersTab } from '../Members/MembersTab';
 import { SettingsTab } from '../Settings/SettingsTab';
-import { LogsTab } from '../Logs/LogsTab';
+import { LogsTab } from '../AuditLogs/LogsTab';
 import { NewExpenseModal } from '../Expenses/NewExpenseModal';
 import { ExpenseDetailsModal } from '../Expenses/ExpenseDetailsModal';
 import { Expense } from '../../lib/supabase';

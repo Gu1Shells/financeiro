@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, CreditCard, Wallet, ChevronDown, ChevronUp, User, Percent } from 'lucide-react';
+import { X, Save, CreditCard, Wallet, ChevronDown, ChevronUp, User, Percent, Plus } from 'lucide-react';
 import { supabase, ExpenseCategory, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -24,6 +24,12 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
   const [loading, setLoading] = useState(false);
   const [showDownPayment, setShowDownPayment] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    color: '#10b981',
+    icon: 'tag'
+  });
   const [formData, setFormData] = useState({
     title: '',
     total_amount: '',
@@ -89,6 +95,38 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
 
     if (data) {
       setProfiles(data);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategory.name.trim()) {
+      alert('Por favor, insira um nome para a categoria');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('expense_categories')
+        .insert([{
+          name: newCategory.name.trim(),
+          color: newCategory.color,
+          icon: newCategory.icon
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCategories([...categories, data]);
+        setFormData({ ...formData, category_id: data.id });
+        setNewCategory({ name: '', color: '#10b981', icon: 'tag' });
+        setShowNewCategory(false);
+        alert('Categoria criada com sucesso!');
+      }
+    } catch (error) {
+      console.error('Error creating category:', error);
+      alert('Erro ao criar categoria');
     }
   };
 
@@ -204,18 +242,28 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Categoria *
               </label>
-              <select
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategory(true)}
+                  className="px-4 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition flex items-center gap-2"
+                  title="Nova Categoria"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -542,6 +590,89 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
           </div>
         </form>
       </div>
+
+      {showNewCategory && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+            <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Nova Categoria</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nome da Categoria *
+                </label>
+                <input
+                  type="text"
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Ex: Eletrônicos"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Cor
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={newCategory.color}
+                    onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                    className="w-16 h-12 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={newCategory.color}
+                    onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="#10b981"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Ícone
+                </label>
+                <select
+                  value={newCategory.icon}
+                  onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="tag">Tag (Padrão)</option>
+                  <option value="home">Casa</option>
+                  <option value="droplet">Água</option>
+                  <option value="zap">Energia</option>
+                  <option value="tv">TV/Internet</option>
+                  <option value="armchair">Móveis</option>
+                  <option value="utensils">Alimentação</option>
+                  <option value="wifi">WiFi</option>
+                  <option value="wrench">Manutenção</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewCategory(false);
+                    setNewCategory({ name: '', color: '#10b981', icon: 'tag' });
+                  }}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateCategory}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition"
+                >
+                  Criar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

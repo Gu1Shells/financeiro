@@ -134,9 +134,9 @@ export const ReportsTab = () => {
     <div className="space-y-6">
       <PaymentStatusReport />
 
-      <div className="border-t-4 border-gray-200 my-8"></div>
+      <div className="border-t-4 border-gray-200 dark:border-gray-700 my-8"></div>
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Estatísticas Gerais</h2>
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Estatísticas Gerais</h2>
 
       <div className="flex gap-2">
         <button
@@ -144,7 +144,7 @@ export const ReportsTab = () => {
           className={`px-4 py-2 rounded-lg font-medium transition ${
             selectedPeriod === 'month'
               ? 'bg-emerald-500 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
           }`}
         >
           Mês
@@ -154,7 +154,7 @@ export const ReportsTab = () => {
           className={`px-4 py-2 rounded-lg font-medium transition ${
             selectedPeriod === 'quarter'
               ? 'bg-emerald-500 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
           }`}
         >
           Trimestre
@@ -164,7 +164,7 @@ export const ReportsTab = () => {
           className={`px-4 py-2 rounded-lg font-medium transition ${
             selectedPeriod === 'year'
               ? 'bg-emerald-500 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
           }`}
         >
           Ano
@@ -172,14 +172,14 @@ export const ReportsTab = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-lg">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Contribuições por Sócio</h3>
-              <p className="text-sm text-gray-500">Total pago por cada um</p>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Contribuições por Sócio</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total pago por cada um</p>
             </div>
           </div>
 
@@ -200,22 +200,22 @@ export const ReportsTab = () => {
                       {index + 1}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800">{user.userName}</p>
-                      <p className="text-sm text-gray-500">{user.percentage.toFixed(1)}% do total</p>
+                      <p className="font-semibold text-gray-800 dark:text-white">{user.userName}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{user.percentage.toFixed(1)}% do total</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-800">
+                    <p className="font-bold text-gray-800 dark:text-white">
                       R$ {user.totalContributed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {user.totalExpenses > user.totalContributed ? (
-                        <span className="text-red-600 flex items-center gap-1 justify-end">
+                        <span className="text-red-600 dark:text-red-400 flex items-center gap-1 justify-end">
                           <TrendingDown className="w-4 h-4" />
                           Deve
                         </span>
                       ) : (
-                        <span className="text-emerald-600 flex items-center gap-1 justify-end">
+                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 justify-end">
                           <TrendingUp className="w-4 h-4" />
                           Ajudou
                         </span>
@@ -223,7 +223,7 @@ export const ReportsTab = () => {
                     </p>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                   <div
                     className="bg-gradient-to-r from-emerald-500 to-teal-600 h-3 rounded-full transition-all"
                     style={{ width: `${user.percentage}%` }}
@@ -234,14 +234,14 @@ export const ReportsTab = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-lg">
               <PieChart className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Despesas por Categoria</h3>
-              <p className="text-sm text-gray-500">Distribuição dos gastos</p>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Despesas por Categoria</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Distribuição dos gastos</p>
             </div>
           </div>
 
@@ -258,14 +258,14 @@ export const ReportsTab = () => {
                         className="w-4 h-4 rounded"
                         style={{ backgroundColor: cat.categoryColor }}
                       />
-                      <span className="font-medium text-gray-800">{cat.categoryName}</span>
-                      <span className="text-sm text-gray-500">({cat.count})</span>
+                      <span className="font-medium text-gray-800 dark:text-white">{cat.categoryName}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">({cat.count})</span>
                     </div>
-                    <span className="font-bold text-gray-800">
+                    <span className="font-bold text-gray-800 dark:text-white">
                       R$ {cat.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
                       className="h-2 rounded-full transition-all"
                       style={{
@@ -281,14 +281,14 @@ export const ReportsTab = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-lg">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Evolução Mensal</h3>
-            <p className="text-sm text-gray-500">Últimos 6 meses</p>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Evolução Mensal</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Últimos 6 meses</p>
           </div>
         </div>
 
@@ -296,7 +296,7 @@ export const ReportsTab = () => {
           {monthlyData.map((data) => (
             <div key={data.month} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-full flex flex-col items-center justify-end h-48">
-                <span className="text-sm font-semibold text-gray-700 mb-2">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   R$ {(data.amount / 1000).toFixed(1)}k
                 </span>
                 <div
@@ -304,7 +304,7 @@ export const ReportsTab = () => {
                   style={{ height: `${(data.amount / maxMonthly) * 100}%` }}
                 />
               </div>
-              <span className="text-xs font-medium text-gray-600">{data.month}</span>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{data.month}</span>
             </div>
           ))}
         </div>

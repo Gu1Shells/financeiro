@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet, Edit } from 'lucide-react';
+import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet, Edit, Unlock } from 'lucide-react';
 import { supabase, Expense, InstallmentPayment, PaymentContribution, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { DeleteExpenseModal } from './DeleteExpenseModal';
 import { EditInstallmentModal } from './EditInstallmentModal';
+import { ReopenInstallmentModal } from './ReopenInstallmentModal';
 
 interface ExpenseDetailsModalProps {
   expense: Expense;
@@ -30,6 +31,10 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
     installment?: InstallmentPayment;
   }>({ show: false });
   const [paymentModal, setPaymentModal] = useState<{
+    show: boolean;
+    installment?: InstallmentPayment;
+  }>({ show: false });
+  const [reopenModal, setReopenModal] = useState<{
     show: boolean;
     installment?: InstallmentPayment;
   }>({ show: false });
@@ -87,7 +92,15 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
   };
 
   const handleEditInstallment = (installment: InstallmentPayment) => {
+    if (installment.status === 'paid') {
+      alert('Parcelas pagas não podem ser editadas. Use a opção "Reabrir" se necessário.');
+      return;
+    }
     setEditModal({ show: true, installment });
+  };
+
+  const handleReopenInstallment = (installment: InstallmentPayment) => {
+    setReopenModal({ show: true, installment });
   };
 
   const statusConfig = {
@@ -276,21 +289,31 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
                       )}
 
                       <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => handleEditInstallment(installment)}
-                          className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition flex items-center justify-center gap-2"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Editar
-                        </button>
-                        {installment.status !== 'paid' && (
+                        {installment.status === 'paid' ? (
                           <button
-                            onClick={() => handleAddPayment(installment)}
-                            className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition flex items-center justify-center gap-2"
+                            onClick={() => handleReopenInstallment(installment)}
+                            className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition flex items-center justify-center gap-2"
                           >
-                            <DollarSign className="w-4 h-4" />
-                            Pagar
+                            <Unlock className="w-4 h-4" />
+                            Reabrir
                           </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleEditInstallment(installment)}
+                              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition flex items-center justify-center gap-2"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleAddPayment(installment)}
+                              className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition flex items-center justify-center gap-2"
+                            >
+                              <DollarSign className="w-4 h-4" />
+                              Pagar
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -334,6 +357,19 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
           onSuccess={() => {
             onUpdate();
             onClose();
+          }}
+        />
+      )}
+
+      {reopenModal.show && reopenModal.installment && (
+        <ReopenInstallmentModal
+          installment={reopenModal.installment}
+          expenseTitle={expense.title}
+          onClose={() => setReopenModal({ show: false })}
+          onSuccess={() => {
+            setReopenModal({ show: false });
+            loadData();
+            onUpdate();
           }}
         />
       )}

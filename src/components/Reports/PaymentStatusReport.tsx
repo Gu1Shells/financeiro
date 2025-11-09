@@ -524,27 +524,27 @@ export const PaymentStatusReport = () => {
                             : 'border-gray-200 bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
                               <h4 className="font-semibold text-gray-800">{status.expense_title}</h4>
                               {isLate && (
-                                <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full font-medium">
+                                <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                                   ATRASADA
                                 </span>
                               )}
                               {isPaid && (
-                                <span className="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full font-medium">
+                                <span className="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                                   PAGA
                                 </span>
                               )}
-                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                                 {status.expense_category}
                               </span>
                             </div>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                              <span>Parcela #{status.installment_number}</span>
-                              <span className="flex items-center gap-1">
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                              <span className="whitespace-nowrap">Parcela #{status.installment_number}</span>
+                              <span className="flex items-center gap-1 whitespace-nowrap">
                                 <Calendar className="w-4 h-4" />
                                 {new Date(status.due_date).toLocaleDateString('pt-BR')}
                               </span>
@@ -553,7 +553,7 @@ export const PaymentStatusReport = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right">
                             <p className={`text-lg font-bold ${isPaid ? 'text-emerald-600' : 'text-red-600'}`}>
                               R$ {Number(status.installment_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>

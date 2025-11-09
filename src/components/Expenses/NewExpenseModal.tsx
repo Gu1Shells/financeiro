@@ -38,7 +38,6 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
     down_payment_installments: '1',
     remaining_payment_method_id: '',
     purchased_by: '',
-    auto_pay_purchaser: false,
     apply_late_fees: false,
     late_fee_percentage: '0.033',
   });
@@ -139,7 +138,6 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
           down_payment_installments: downPaymentAmount > 0 ? downPaymentInstallments : 0,
           remaining_payment_method_id: formData.remaining_payment_method_id,
           purchased_by: formData.purchased_by,
-          auto_pay_purchaser: formData.auto_pay_purchaser,
           apply_late_fees: formData.apply_late_fees,
           late_fee_percentage: formData.apply_late_fees ? parseFloat(formData.late_fee_percentage) : 0,
         },
@@ -243,26 +241,6 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
             </p>
           </div>
 
-          {formData.purchased_by && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.auto_pay_purchaser}
-                  onChange={(e) => setFormData({ ...formData, auto_pay_purchaser: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-blue-900">
-                    Quitar automaticamente as parcelas do comprador
-                  </span>
-                  <p className="text-xs text-blue-700 mt-0.5">
-                    Todas as parcelas serão marcadas como pagas pelo comprador, e os outros membros pagarão apenas a divisão entre eles
-                  </p>
-                </div>
-              </label>
-            </div>
-          )}
 
           <div>
             <button

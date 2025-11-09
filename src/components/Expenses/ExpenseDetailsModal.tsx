@@ -322,24 +322,40 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [selectedUser, setSelectedUser] = useState(user?.id || '');
+  const [payForAll, setPayForAll] = useState(false);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const numProfiles = profiles.length;
+  const amountPerPerson = numProfiles > 0 ? Number(installment.amount) / numProfiles : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('payment_contributions').insert([
-        {
+      if (payForAll) {
+        const contributions = profiles.map(profile => ({
           installment_id: installment.id,
-          user_id: selectedUser,
-          amount: parseFloat(amount),
-          notes: notes || null,
-        },
-      ]);
+          user_id: profile.id,
+          amount: amountPerPerson,
+          notes: notes || 'Pagamento dividido entre todos',
+        }));
 
-      if (error) throw error;
+        const { error } = await supabase.from('payment_contributions').insert(contributions);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('payment_contributions').insert([
+          {
+            installment_id: installment.id,
+            user_id: selectedUser,
+            amount: parseFloat(amount),
+            notes: notes || null,
+          },
+        ]);
+        if (error) throw error;
+      }
+
       onSuccess();
     } catch (error) {
       console.error('Error adding payment:', error);
@@ -360,39 +376,70 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quem pagou?</label>
-            <select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              required
-            >
-              {profiles.map((profile) => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.full_name}
-                </option>
-              ))}
-            </select>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={payForAll}
+                onChange={(e) => {
+                  setPayForAll(e.target.checked);
+                  if (e.target.checked) {
+                    setAmount(String(amountPerPerson.toFixed(2)));
+                  }
+                }}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-blue-900">
+                  Todos pagaram juntos
+                </span>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Registra pagamento de R$ {amountPerPerson.toFixed(2)} para cada um dos {numProfiles} membros
+                </p>
+              </div>
+            </label>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Valor (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              max={Number(installment.amount)}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="0.00"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Valor restante: R$ {Number(installment.amount).toFixed(2)}
-            </p>
-          </div>
+          {!payForAll && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quem pagou?</label>
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                required
+              >
+                {profiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {!payForAll && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Valor (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                max={Number(installment.amount)}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                placeholder="0.00"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Valor da parcela: R$ {Number(installment.amount).toFixed(2)}
+              </p>
+              <p className="text-xs text-emerald-600 mt-1">
+                Sugestão (dividido): R$ {amountPerPerson.toFixed(2)}
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Observações</label>

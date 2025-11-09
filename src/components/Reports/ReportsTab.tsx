@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Users, PieChart } from 'lucide-react';
 import { supabase, Profile } from '../../lib/supabase';
+import { PaymentStatusReport } from './PaymentStatusReport';
 
 interface UserStats {
   userId: string;
@@ -131,6 +132,12 @@ export const ReportsTab = () => {
 
   return (
     <div className="space-y-6">
+      <PaymentStatusReport />
+
+      <div className="border-t-4 border-gray-200 my-8"></div>
+
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Estatísticas Gerais</h2>
+
       <div className="flex gap-2">
         <button
           onClick={() => setSelectedPeriod('month')}

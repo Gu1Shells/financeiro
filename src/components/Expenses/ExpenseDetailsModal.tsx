@@ -122,15 +122,13 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {user?.id === expense.created_by && (
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition text-red-600"
-                  title="Excluir despesa"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="p-2 hover:bg-red-50 rounded-lg transition text-red-600"
+                title="Excluir despesa"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
                 <X className="w-6 h-6 text-gray-600" />
               </button>

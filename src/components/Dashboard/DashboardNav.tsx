@@ -17,7 +17,7 @@ export const DashboardNav = ({ activeTab, onTabChange, onNewExpense }: Dashboard
   ];
 
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-16 z-30">
+    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-16 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div className="flex gap-1 overflow-x-auto">
@@ -30,8 +30,8 @@ export const DashboardNav = ({ activeTab, onTabChange, onNewExpense }: Dashboard
                   onClick={() => onTabChange(tab.id)}
                   className={`flex items-center gap-2 px-4 py-4 border-b-2 transition whitespace-nowrap ${
                     isActive
-                      ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                      ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Icon className="w-5 h-5" />

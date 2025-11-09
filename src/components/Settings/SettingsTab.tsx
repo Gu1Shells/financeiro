@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Upload, Building2, Users, Camera, Save, X, Link as LinkIcon } from 'lucide-react';
+import { Upload, Building2, Users, Camera, Save, X, Link as LinkIcon, Moon, Sun } from 'lucide-react';
 import { supabase, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface CompanySettings {
   company_name: string;
@@ -10,6 +11,7 @@ interface CompanySettings {
 
 export const SettingsTab = () => {
   const { user } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [settings, setSettings] = useState<CompanySettings>({
     company_name: 'Minha Empresa',
     company_logo_url: null,
@@ -227,37 +229,66 @@ export const SettingsTab = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-1">Configurações</h2>
-        <p className="text-gray-600">Personalize sua empresa e perfis dos sócios</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Configurações</h2>
+        <p className="text-gray-600 dark:text-gray-400">Personalize sua empresa e perfis dos sócios</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-lg">
+              {isDarkMode ? <Moon className="w-6 h-6 text-white" /> : <Sun className="w-6 h-6 text-white" />}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Tema Escuro</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Preferência pessoal de visualização</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleDarkMode}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+              isDarkMode ? 'bg-purple-600' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                isDarkMode ? 'translate-x-7' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Ative o modo escuro para uma experiência visual mais confortável em ambientes com pouca luz. Esta preferência é salva apenas para o seu usuário.
+        </p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-lg">
             <Building2 className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Dados da Empresa</h3>
-            <p className="text-sm text-gray-500">Logo e informações gerais</p>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Dados da Empresa</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Logo e informações gerais</p>
           </div>
         </div>
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nome da Empresa
             </label>
             <input
               type="text"
               value={settings.company_name}
               onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Nome da sua empresa"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Logo da Empresa
             </label>
             <div className="flex items-start gap-6">
@@ -266,7 +297,7 @@ export const SettingsTab = () => {
                   <img
                     src={settings.company_logo_url}
                     alt="Logo"
-                    className="w-32 h-32 object-contain rounded-lg border-2 border-gray-200 bg-white"
+                    className="w-32 h-32 object-contain rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                   />
                   <button
                     onClick={() => setSettings({ ...settings, company_logo_url: null })}
@@ -276,7 +307,7 @@ export const SettingsTab = () => {
                   </button>
                 </div>
               ) : (
-                <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
                   <Building2 className="w-12 h-12 text-gray-400" />
                 </div>
               )}
@@ -311,7 +342,7 @@ export const SettingsTab = () => {
                       value={logoUrlInput}
                       onChange={(e) => setLogoUrlInput(e.target.value)}
                       placeholder="https://exemplo.com/logo.png"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                     <button
                       onClick={handleLogoUrlSubmit}
@@ -324,7 +355,7 @@ export const SettingsTab = () => {
                 )}
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Upload: PNG, JPG ou GIF (máx 2MB) | URL: Link direto para imagem
             </p>
           </div>
@@ -342,14 +373,14 @@ export const SettingsTab = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-lg">
             <Users className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Fotos dos Sócios</h3>
-            <p className="text-sm text-gray-500">Adicione fotos de perfil para cada membro</p>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Fotos dos Sócios</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Adicione fotos de perfil para cada membro</p>
           </div>
         </div>
 
@@ -357,7 +388,7 @@ export const SettingsTab = () => {
           {profiles.map((profile) => (
             <div
               key={profile.id}
-              className="border-2 border-gray-200 rounded-xl p-4 hover:border-emerald-200 transition"
+              className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-emerald-200 dark:hover:border-emerald-700 transition bg-white dark:bg-gray-750"
             >
               <div className="flex flex-col items-center">
                 <div className="relative mb-4">
@@ -366,7 +397,7 @@ export const SettingsTab = () => {
                       <img
                         src={profile.profile_photo_url}
                         alt={profile.full_name}
-                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600"
                       />
                       <button
                         onClick={async () => {
@@ -386,7 +417,7 @@ export const SettingsTab = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center border-4 border-gray-200">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center border-4 border-gray-200 dark:border-gray-600">
                       <span className="text-3xl font-bold text-white">
                         {profile.full_name.charAt(0).toUpperCase()}
                       </span>
@@ -404,8 +435,8 @@ export const SettingsTab = () => {
                   </label>
                 </div>
 
-                <h4 className="font-bold text-gray-800 text-center">{profile.full_name}</h4>
-                <p className="text-sm text-gray-500 mb-3">{profile.email}</p>
+                <h4 className="font-bold text-gray-800 dark:text-white text-center">{profile.full_name}</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{profile.email}</p>
 
                 {uploadingProfile === profile.id ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent"></div>
@@ -419,7 +450,7 @@ export const SettingsTab = () => {
                           setProfileUrlInputs({ ...profileUrlInputs, [profile.id]: e.target.value })
                         }
                         placeholder="URL da foto"
-                        className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                       <button
                         onClick={() => handleProfileUrlSubmit(profile.id)}

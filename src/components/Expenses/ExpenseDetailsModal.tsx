@@ -112,11 +112,11 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">{expense.title}</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{expense.title}</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Criado por {expense.creator?.full_name} em{' '}
                 {new Date(expense.created_at).toLocaleDateString('pt-BR')}
               </p>
@@ -124,32 +124,32 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="p-2 hover:bg-red-50 rounded-lg transition text-red-600"
+                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition text-red-600 dark:text-red-400"
                 title="Excluir despesa"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
-                <X className="w-6 h-6 text-gray-600" />
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+                <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </button>
             </div>
           </div>
 
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Valor Total</p>
-                <p className="text-2xl font-bold text-gray-800">
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 p-4 rounded-xl">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Valor Total</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">
                   R$ {Number(expense.total_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Parcelas</p>
-                <p className="text-2xl font-bold text-gray-800">{expense.installments}x</p>
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 p-4 rounded-xl">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Parcelas</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">{expense.installments}x</p>
               </div>
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Valor/Parcela</p>
-                <p className="text-2xl font-bold text-gray-800">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 p-4 rounded-xl">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Valor/Parcela</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">
                   R${' '}
                   {(Number(expense.total_amount) / expense.installments).toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
@@ -195,7 +195,7 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
               </div>
             ) : (
               <div className="space-y-3">
-                <h3 className="text-lg font-bold text-gray-800">Parcelas</h3>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">Parcelas</h3>
                 {installments.map((installment) => {
                   const installmentContribs = contributions[installment.id] || [];
                   const totalPaid = installmentContribs.reduce((sum, c) => sum + Number(c.amount), 0);
@@ -210,24 +210,24 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
                       key={installment.id}
                       className={`rounded-xl p-4 border-2 transition ${
                         isDownPayment
-                          ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
-                          : 'bg-gray-50 border-gray-200 hover:border-emerald-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700 hover:border-emerald-300 dark:hover:border-emerald-600'
+                          : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-emerald-200 dark:hover:border-emerald-600'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`bg-white w-10 h-10 rounded-lg flex items-center justify-center font-bold border-2 ${
-                            isDownPayment ? 'text-emerald-600 border-emerald-300' : 'text-blue-600 border-blue-200'
+                          <div className={`bg-white dark:bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center font-bold border-2 ${
+                            isDownPayment ? 'text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600' : 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-600'
                           }`}>
                             {installment.installment_number}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-800 flex items-center gap-2">
-                              {isDownPayment && <Wallet className="w-4 h-4 text-emerald-600" />}
+                            <p className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                              {isDownPayment && <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
                               Parcela {installment.installment_number}
-                              {isDownPayment && <span className="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">Entrada</span>}
+                              {isDownPayment && <span className="text-xs bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-full">Entrada</span>}
                             </p>
-                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
                                 {new Date(installment.due_date).toLocaleDateString('pt-BR')}
@@ -251,12 +251,12 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
 
                       <div className="mb-3">
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-gray-600">Progresso</span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="text-gray-600 dark:text-gray-400">Progresso</span>
+                          <span className="font-semibold text-gray-800 dark:text-white">
                             R$ {totalPaid.toFixed(2)} / R$ {Number(installment.amount).toFixed(2)}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all"
                             style={{ width: `${Math.min((totalPaid / Number(installment.amount)) * 100, 100)}%` }}
@@ -266,19 +266,19 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
 
                       {installmentContribs.length > 0 && (
                         <div className="mb-3 space-y-2">
-                          <p className="text-sm font-medium text-gray-700">Contribuições:</p>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Contribuições:</p>
                           {installmentContribs.map((contrib) => (
                             <div
                               key={contrib.id}
-                              className="flex items-center justify-between bg-white p-2 rounded-lg"
+                              className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-lg"
                             >
                               <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4 text-emerald-600" />
-                                <span className="text-sm font-medium text-gray-700">
+                                <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                   {contrib.user?.full_name}
                                 </span>
                               </div>
-                              <span className="text-sm font-semibold text-gray-800">
+                              <span className="text-sm font-semibold text-gray-800 dark:text-white">
                                 R$ {Number(contrib.amount).toFixed(2)}
                               </span>
                             </div>

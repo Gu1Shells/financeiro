@@ -185,18 +185,18 @@ export const OverviewTab = () => {
         />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Despesas Recentes</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Despesas Recentes</h3>
         <div className="space-y-3">
           {recentExpenses.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Nenhuma despesa registrada ainda</p>
+            <p className="text-gray-600 dark:text-gray-400 text-center py-8">Nenhuma despesa registrada ainda</p>
           ) : (
             recentExpenses.map((expense) => {
               const IconComponent = iconMap[expense.category?.icon || 'tag'] || Tag;
               return (
                 <div
                   key={expense.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -206,17 +206,17 @@ export const OverviewTab = () => {
                       <IconComponent className="w-5 h-5" style={{ color: expense.category?.color }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800">{expense.title}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold text-gray-800 dark:text-white">{expense.title}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {expense.creator?.full_name} • {expense.installments}x
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-800">
+                    <p className="font-bold text-gray-800 dark:text-white">
                       R$ {Number(expense.total_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
-                    <p className="text-sm text-gray-500">{expense.category?.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{expense.category?.name}</p>
                   </div>
                 </div>
               );

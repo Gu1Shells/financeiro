@@ -69,7 +69,7 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
           className={`px-4 py-2 rounded-lg font-medium transition ${
             filter === 'all'
               ? 'bg-emerald-500 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
           }`}
         >
           Todas
@@ -79,7 +79,7 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
           className={`px-4 py-2 rounded-lg font-medium transition ${
             filter === 'fixed'
               ? 'bg-emerald-500 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
           }`}
         >
           Fixas
@@ -89,7 +89,7 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
           className={`px-4 py-2 rounded-lg font-medium transition ${
             filter === 'installment'
               ? 'bg-emerald-500 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
           }`}
         >
           Parceladas
@@ -97,10 +97,10 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
       </div>
 
       {filteredExpenses.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Nenhuma despesa encontrada</h3>
-          <p className="text-gray-500">Clique em "Nova Despesa" para adicionar uma</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+          <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Nenhuma despesa encontrada</h3>
+          <p className="text-gray-600 dark:text-gray-400">Clique em "Nova Despesa" para adicionar uma</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -118,7 +118,7 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
               <div
                 key={expense.id}
                 onClick={() => onExpenseClick(expense)}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-lg hover:border-emerald-200 transition cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-lg hover:border-emerald-200 dark:hover:border-emerald-600 transition cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div
@@ -139,38 +139,38 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
                   </div>
                 </div>
 
-              <h3 className="font-bold text-gray-800 mb-2 text-lg">{expense.title}</h3>
+              <h3 className="font-bold text-gray-800 dark:text-white mb-2 text-lg">{expense.title}</h3>
 
               <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Package className="w-4 h-4" />
                   <span>{expense.category?.name}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <User className="w-4 h-4" />
                   <span>{expense.creator?.full_name}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Calendar className="w-4 h-4" />
                   <span>{new Date(expense.start_date).toLocaleDateString('pt-BR')}</span>
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500">Valor Total</p>
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Valor Total</p>
+                  <p className="text-xl font-bold text-gray-800 dark:text-white">
                     R$ {Number(expense.total_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">Parcelas</p>
-                  <p className="text-lg font-semibold text-emerald-600">{expense.installments}x</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Parcelas</p>
+                  <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{expense.installments}x</p>
                 </div>
               </div>
 
               {expense.notes && (
-                <p className="text-sm text-gray-500 mt-3 line-clamp-2">{expense.notes}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-2">{expense.notes}</p>
               )}
               </div>
             );

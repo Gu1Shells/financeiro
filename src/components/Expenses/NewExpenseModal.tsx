@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Save, CreditCard, Banknote, Wallet, ChevronDown, ChevronUp } from 'lucide-react';
-import { supabase, ExpenseCategory } from '../../lib/supabase';
+import { X, Save, CreditCard, Wallet, ChevronDown, ChevronUp, User, Percent } from 'lucide-react';
+import { supabase, ExpenseCategory, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface NewExpenseModalProps {
@@ -20,8 +20,10 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
   const { user } = useAuth();
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDownPayment, setShowDownPayment] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     total_amount: '',
@@ -35,11 +37,16 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
     down_payment_method_id: '',
     down_payment_installments: '1',
     remaining_payment_method_id: '',
+    purchased_by: '',
+    auto_pay_purchaser: false,
+    apply_late_fees: false,
+    late_fee_percentage: '0.033',
   });
 
   useEffect(() => {
     loadCategories();
     loadPaymentMethods();
+    loadProfiles();
   }, []);
 
   const loadCategories = async () => {
@@ -75,6 +82,17 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
     }
   };
 
+  const loadProfiles = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('full_name');
+
+    if (data) {
+      setProfiles(data);
+    }
+  };
+
   const totalAmount = parseFloat(formData.total_amount) || 0;
   const downPaymentAmount = parseFloat(formData.down_payment_amount) || 0;
   const remainingAmount = totalAmount - downPaymentAmount;
@@ -98,6 +116,11 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
       return;
     }
 
+    if (!formData.purchased_by) {
+      alert('Por favor, selecione quem realizou a compra!');
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.from('expenses').insert([
@@ -115,6 +138,10 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
           down_payment_method_id: downPaymentAmount > 0 ? formData.down_payment_method_id : null,
           down_payment_installments: downPaymentAmount > 0 ? downPaymentInstallments : 0,
           remaining_payment_method_id: formData.remaining_payment_method_id,
+          purchased_by: formData.purchased_by,
+          auto_pay_purchaser: formData.auto_pay_purchaser,
+          apply_late_fees: formData.apply_late_fees,
+          late_fee_percentage: formData.apply_late_fees ? parseFloat(formData.late_fee_percentage) : 0,
         },
       ]);
 
@@ -193,6 +220,49 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
               </select>
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quem realizou a compra? *
+            </label>
+            <select
+              value={formData.purchased_by}
+              onChange={(e) => setFormData({ ...formData, purchased_by: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              required
+            >
+              <option value="">Selecione...</option>
+              {profiles.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.full_name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Quem passou no cartão ou pagou à vista
+            </p>
+          </div>
+
+          {formData.purchased_by && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.auto_pay_purchaser}
+                  onChange={(e) => setFormData({ ...formData, auto_pay_purchaser: e.target.checked })}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-blue-900">
+                    Quitar automaticamente as parcelas do comprador
+                  </span>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    Todas as parcelas serão marcadas como pagas pelo comprador, e os outros membros pagarão apenas a divisão entre eles
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
 
           <div>
             <button
@@ -298,6 +368,58 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 {remainingInstallments}x de R$ {remainingPerInstallment.toFixed(2)}
               </p>
             </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mb-3"
+            >
+              <Percent className="w-5 h-5" />
+              {showAdvanced ? 'Ocultar configurações avançadas' : 'Configurações avançadas (juros)'}
+              {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+
+            {showAdvanced && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.apply_late_fees}
+                    onChange={(e) => setFormData({ ...formData, apply_late_fees: e.target.checked })}
+                    className="w-5 h-5 text-amber-600 rounded focus:ring-2 focus:ring-amber-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-amber-900">
+                      Aplicar juros por atraso
+                    </span>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Cobra juros automáticos para pagamentos atrasados
+                    </p>
+                  </div>
+                </label>
+
+                {formData.apply_late_fees && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Taxa de juros por dia (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      value={formData.late_fee_percentage}
+                      onChange={(e) => setFormData({ ...formData, late_fee_percentage: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-amber-700 mt-1">
+                      Padrão: 0.033% ao dia (taxa de maquininha = ~1% ao mês)
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {totalAmount > 0 && (

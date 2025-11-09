@@ -48,7 +48,9 @@ export const OverviewTab = () => {
           .from('payment_contributions')
           .select('amount')
           .eq('user_id', user.id),
-        supabase.from('installment_payments').select('status'),
+        supabase
+          .from('installment_payments')
+          .select('status, expense:expenses!inner(id)'),
       ]);
 
       const totalExpenses = expensesRes.data?.reduce((sum, e) => sum + Number(e.total_amount), 0) || 0;

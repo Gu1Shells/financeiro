@@ -79,17 +79,25 @@ export const MembersTab = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-white text-xl ${
-                    index === 0
-                      ? 'bg-gradient-to-br from-amber-400 to-amber-600'
-                      : index === 1
-                      ? 'bg-gradient-to-br from-gray-300 to-gray-500'
-                      : 'bg-gradient-to-br from-orange-500 to-orange-700'
-                  }`}
-                >
-                  {member.full_name.charAt(0).toUpperCase()}
-                </div>
+                {member.profile_photo_url ? (
+                  <img
+                    src={member.profile_photo_url}
+                    alt={member.full_name}
+                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-white text-xl ${
+                      index === 0
+                        ? 'bg-gradient-to-br from-amber-400 to-amber-600'
+                        : index === 1
+                        ? 'bg-gradient-to-br from-gray-300 to-gray-500'
+                        : 'bg-gradient-to-br from-orange-500 to-orange-700'
+                    }`}
+                  >
+                    {member.full_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h3 className="font-bold text-gray-800 text-lg">{member.full_name}</h3>
                   <p className="text-sm text-gray-500">

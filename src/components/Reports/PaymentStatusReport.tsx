@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, Profile } from '../../lib/supabase';
 
 interface UserDebtSummary {
   user_id: string;
@@ -10,6 +10,7 @@ interface UserDebtSummary {
   pending_installments: number;
   total_debt: number;
   total_paid: number;
+  profile_photo_url?: string | null;
 }
 
 interface InstallmentStatus {
@@ -39,12 +40,22 @@ export const PaymentStatusReport = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [summaryRes, statusRes] = await Promise.all([
+      const [summaryRes, statusRes, profilesRes] = await Promise.all([
         supabase.from('user_debt_summary').select('*'),
         supabase.from('installment_payment_status').select('*'),
+        supabase.from('profiles').select('id, profile_photo_url'),
       ]);
 
-      if (summaryRes.data) setUserSummaries(summaryRes.data);
+      if (summaryRes.data && profilesRes.data) {
+        const summariesWithPhotos = summaryRes.data.map(summary => {
+          const profile = profilesRes.data.find(p => p.id === summary.user_id);
+          return {
+            ...summary,
+            profile_photo_url: profile?.profile_photo_url
+          };
+        });
+        setUserSummaries(summariesWithPhotos);
+      }
       if (statusRes.data) setDetailedStatus(statusRes.data);
     } catch (error) {
       console.error('Error loading payment status:', error);
@@ -108,7 +119,22 @@ export const PaymentStatusReport = () => {
                 className="bg-white rounded-xl shadow-md border-2 border-gray-200 p-5 hover:shadow-lg transition"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-800">{summary.full_name}</h3>
+                  <div className="flex items-center gap-3">
+                    {summary.profile_photo_url ? (
+                      <img
+                        src={summary.profile_photo_url}
+                        alt={summary.full_name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <span className="text-xl font-bold text-white">
+                          {summary.full_name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <h3 className="text-lg font-bold text-gray-800">{summary.full_name}</h3>
+                  </div>
                   {paymentRate === 100 ? (
                     <CheckCircle className="w-6 h-6 text-emerald-500" />
                   ) : paymentRate > 0 ? (

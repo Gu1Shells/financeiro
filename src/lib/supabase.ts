@@ -3,7 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('🔧 Supabase Config:', {
+  url: supabaseUrl ? '✅ Presente' : '❌ Ausente',
+  key: supabaseAnonKey ? '✅ Presente' : '❌ Ausente',
+  urlValue: supabaseUrl,
+});
+
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Variáveis de ambiente ausentes:', {
+    VITE_SUPABASE_URL: supabaseUrl,
+    VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? 'presente' : 'ausente',
+  });
   throw new Error('Missing Supabase environment variables');
 }
 

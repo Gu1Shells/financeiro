@@ -34,22 +34,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initAuth = async () => {
       try {
+        console.log('🔄 Iniciando autenticação...');
+
         timeoutId = setTimeout(() => {
           if (mounted && loading) {
-            console.error('Auth initialization timeout');
+            console.error('⏱️ Auth initialization timeout');
             setError('Timeout ao conectar. Verifique sua conexão.');
             setLoading(false);
           }
         }, 10000);
 
+        console.log('📡 Tentando obter sessão do Supabase...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('📥 Resposta recebida:', { session: !!session, error: !!error });
 
         clearTimeout(timeoutId);
 
         if (!mounted) return;
 
         if (error) {
-          console.error('Session error:', error);
+          console.error('❌ Session error:', error);
           await supabase.auth.signOut({ scope: 'local' });
           setUser(null);
           setProfile(null);
@@ -58,25 +62,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        console.log('✅ Sessão obtida com sucesso');
         setUser(session?.user ?? null);
         if (session?.user) {
+          console.log('👤 Carregando perfil do usuário...');
           await loadProfile(session.user.id);
         } else {
+          console.log('👤 Nenhum usuário logado');
           setLoading(false);
         }
       } catch (err: any) {
-        console.error('Auth initialization error:', err);
+        console.error('💥 Auth initialization error:', err);
+        console.error('💥 Error details:', {
+          message: err?.message,
+          stack: err?.stack,
+          name: err?.name,
+        });
+
         if (mounted) {
           let errorMessage = 'Erro ao conectar ao servidor';
 
           if (err?.message?.includes('fetch') || err?.message?.includes('Failed to fetch')) {
-            errorMessage = 'Não foi possível conectar ao servidor. Verifique se há bloqueadores de anúncios ou extensões bloqueando a conexão.';
+            errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.';
           } else if (err?.message?.includes('CORS')) {
             errorMessage = 'Erro de CORS. O servidor pode estar com problemas de configuração.';
+          } else if (err?.message?.includes('network')) {
+            errorMessage = 'Erro de rede. Verifique sua conexão.';
           } else if (err?.message) {
             errorMessage = err.message;
           }
 
+          console.error('📢 Mostrando erro para usuário:', errorMessage);
           setError(errorMessage);
           setUser(null);
           setProfile(null);

@@ -45,9 +45,9 @@ export const LoginForm = ({ onToggle }: LoginFormProps) => {
 
   return (
     <div className="w-full max-w-md">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
         <div className="flex flex-col items-center justify-center mb-8 lg:hidden">
-          <div className="bg-white p-4 rounded-2xl shadow-lg mb-4">
+          <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl shadow-lg mb-4 border border-white/20">
             {companyLogo ? (
               <img
                 src={companyLogo}
@@ -55,51 +55,51 @@ export const LoginForm = ({ onToggle }: LoginFormProps) => {
                 className="w-16 h-16 object-contain"
               />
             ) : (
-              <Building2 className="w-16 h-16 text-emerald-600" />
+              <Building2 className="w-16 h-16 text-white" />
             )}
           </div>
         </div>
 
         <div className="flex items-center justify-center mb-8 lg:mb-8">
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl">
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl shadow-lg">
             <LogIn className="w-8 h-8 text-white" />
           </div>
         </div>
 
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">Bem-vindo</h2>
-        <p className="text-center text-gray-600 mb-8">Entre com sua conta</p>
+        <h2 className="text-3xl font-bold text-center text-white mb-2">Bem-vindo</h2>
+        <p className="text-center text-white/80 mb-8">Entre com sua conta</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white/90 mb-2">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-white placeholder-white/50"
               placeholder="seu@email.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white/90 mb-2">
               Senha
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-white placeholder-white/50"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm backdrop-blur-sm">
               {error}
             </div>
           )}
@@ -107,18 +107,18 @@ export const LoginForm = ({ onToggle }: LoginFormProps) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-white/80">
             Não tem uma conta?{' '}
             <button
               onClick={onToggle}
-              className="text-emerald-600 font-semibold hover:text-emerald-700 transition"
+              className="text-emerald-400 font-semibold hover:text-emerald-300 transition"
             >
               Cadastre-se
             </button>

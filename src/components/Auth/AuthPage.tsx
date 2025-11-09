@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LoginForm } from './LoginForm';
 import { SignUpForm } from './SignUpForm';
-import { FloatingCards } from './FloatingCards';
-import { AnimatedCharts } from './AnimatedCharts';
-import { FloatingParticles } from './FloatingParticles';
+import { ShaderAnimation } from '../ui/shader-lines';
 import { Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -29,16 +27,14 @@ export const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-black">
+      <ShaderAnimation />
 
-      <FloatingParticles />
-      <FloatingCards />
-      <AnimatedCharts />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-transparent to-black/40 pointer-events-none z-10" />
 
-      <div className="w-full max-w-6xl flex items-center justify-center gap-12 relative z-10">
+      <div className="w-full max-w-6xl flex items-center justify-center gap-16 relative z-20">
         <div className="hidden lg:flex flex-col items-center justify-center flex-1">
-          <div className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white/20 mb-8">
             {companyLogo ? (
               <img
                 src={companyLogo}
@@ -46,12 +42,15 @@ export const AuthPage = () => {
                 className="w-32 h-32 object-contain"
               />
             ) : (
-              <Building2 className="w-32 h-32 text-emerald-600" />
+              <Building2 className="w-32 h-32 text-white" />
             )}
           </div>
-          <h1 className="text-6xl font-bold text-gray-800 mt-8 text-center drop-shadow-lg">
+          <h1 className="text-7xl font-bold text-white text-center tracking-tight">
             {companyName}
           </h1>
+          <p className="text-lg text-white/80 text-center mt-4 max-w-md">
+            Gerencie despesas compartilhadas com facilidade e transparência
+          </p>
         </div>
 
         <div className="flex-1 flex items-center justify-center">

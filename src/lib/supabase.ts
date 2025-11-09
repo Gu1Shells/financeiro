@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ngjnqasglqqwspybnets.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nam5xYXNnbHFxd3NweWJuZXRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NDU3NjksImV4cCI6MjA3ODIyMTc2OX0.PW1Z9QIFJwAHzP_EN-uyIPha5cmYe9SmWMT67rB7i8k';
 
 console.log('🔧 Supabase Config:', {
   url: supabaseUrl ? '✅ Presente' : '❌ Ausente',
   key: supabaseAnonKey ? '✅ Presente' : '❌ Ausente',
   urlValue: supabaseUrl,
+  source: import.meta.env.VITE_SUPABASE_URL ? 'env file' : 'fallback'
 });
 
 if (!supabaseUrl || !supabaseAnonKey) {

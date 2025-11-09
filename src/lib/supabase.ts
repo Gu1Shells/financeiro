@@ -69,6 +69,10 @@ export type Expense = {
   start_date: string;
   notes?: string;
   priority: 'baixa' | 'media' | 'alta' | 'urgente';
+  status: 'active' | 'paid';
+  is_recurring: boolean;
+  recurrence_day?: number;
+  parent_expense_id?: string;
   created_at: string;
   updated_at: string;
   deleted_at?: string;
@@ -110,4 +114,17 @@ export type PaymentContribution = {
   created_at: string;
   user?: Profile;
   installment?: InstallmentPayment;
+};
+
+export type AuditLog = {
+  id: string;
+  user_id: string;
+  action: 'create' | 'update' | 'delete';
+  entity_type: string;
+  entity_id: string;
+  description: string;
+  old_values?: any;
+  new_values?: any;
+  created_at: string;
+  user?: Profile;
 };

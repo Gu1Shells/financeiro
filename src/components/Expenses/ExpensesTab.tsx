@@ -33,6 +33,8 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
       const { data, error } = await supabase
         .from('expenses')
         .select('*, category:expense_categories(*), creator:profiles!created_by(*)')
+        .eq('status', 'active')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

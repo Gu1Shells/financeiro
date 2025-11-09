@@ -1,4 +1,4 @@
-import { Home, CreditCard, TrendingUp, Plus, Users, FileText, Settings } from 'lucide-react';
+import { Home, CreditCard, CheckCircle2, TrendingUp, Plus, Users, FileText, Settings } from 'lucide-react';
 
 interface DashboardNavProps {
   activeTab: string;
@@ -10,10 +10,11 @@ export const DashboardNav = ({ activeTab, onTabChange, onNewExpense }: Dashboard
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: Home },
     { id: 'expenses', label: 'Despesas', icon: CreditCard },
+    { id: 'paid', label: 'Pagos', icon: CheckCircle2 },
     { id: 'reports', label: 'Relatórios', icon: TrendingUp },
     { id: 'members', label: 'Sócios', icon: Users },
     { id: 'settings', label: 'Configurações', icon: Settings },
-    { id: 'logs', label: 'Logs de Exclusão', icon: FileText },
+    { id: 'logs', label: 'Logs', icon: FileText },
   ];
 
   return (

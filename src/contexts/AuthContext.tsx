@@ -100,13 +100,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) throw error;
     } catch (error) {
       console.error('Error signing out:', error);
     } finally {
       setUser(null);
       setProfile(null);
-      window.location.reload();
+      localStorage.clear();
+      sessionStorage.clear();
     }
   };
 

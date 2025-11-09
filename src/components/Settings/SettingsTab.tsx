@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Building2, Users, Camera, Save, X } from 'lucide-react';
+import { Upload, Building2, Users, Camera, Save, X, Link as LinkIcon } from 'lucide-react';
 import { supabase, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -19,6 +19,9 @@ export const SettingsTab = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingProfile, setUploadingProfile] = useState<string | null>(null);
+  const [logoUrlInput, setLogoUrlInput] = useState('');
+  const [showLogoUrlInput, setShowLogoUrlInput] = useState(false);
+  const [profileUrlInputs, setProfileUrlInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadData();
@@ -45,6 +48,15 @@ export const SettingsTab = () => {
     }
   };
 
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -61,29 +73,51 @@ export const SettingsTab = () => {
 
     setUploadingLogo(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${Date.now()}.${fileExt}`;
-      const filePath = `company/${fileName}`;
+      const base64 = await convertToBase64(file);
 
-      const { error: uploadError, data } = await supabase.storage
-        .from('public')
-        .upload(filePath, file, { upsert: true });
+      const settingsId = (await supabase.from('company_settings').select('id').single()).data?.id;
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
-
-      await supabase
+      const { error } = await supabase
         .from('company_settings')
-        .update({ company_logo_url: publicUrl })
-        .eq('id', (await supabase.from('company_settings').select('id').single()).data?.id);
+        .update({ company_logo_url: base64 })
+        .eq('id', settingsId);
 
-      setSettings({ ...settings, company_logo_url: publicUrl });
+      if (error) throw error;
+
+      setSettings({ ...settings, company_logo_url: base64 });
+      alert('Logo enviada com sucesso!');
     } catch (error) {
       console.error('Error uploading logo:', error);
       alert('Erro ao fazer upload da logo. Tente novamente.');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleLogoUrlSubmit = async () => {
+    if (!logoUrlInput.trim()) {
+      alert('Por favor, insira uma URL válida');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const settingsId = (await supabase.from('company_settings').select('id').single()).data?.id;
+
+      const { error } = await supabase
+        .from('company_settings')
+        .update({ company_logo_url: logoUrlInput.trim() })
+        .eq('id', settingsId);
+
+      if (error) throw error;
+
+      setSettings({ ...settings, company_logo_url: logoUrlInput.trim() });
+      setLogoUrlInput('');
+      setShowLogoUrlInput(false);
+      alert('Logo atualizada com sucesso!');
+    } catch (error) {
+      console.error('Error updating logo:', error);
+      alert('Erro ao atualizar logo. Tente novamente.');
     } finally {
       setUploadingLogo(false);
     }
@@ -108,30 +142,21 @@ export const SettingsTab = () => {
 
     setUploadingProfile(profileId);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `avatar-${profileId}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const base64 = await convertToBase64(file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('public')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
-
-      await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({ profile_photo_url: publicUrl })
+        .update({ profile_photo_url: base64 })
         .eq('id', profileId);
+
+      if (error) throw error;
 
       setProfiles(
         profiles.map((p) =>
-          p.id === profileId ? { ...p, profile_photo_url: publicUrl } : p
+          p.id === profileId ? { ...p, profile_photo_url: base64 } : p
         )
       );
+      alert('Foto atualizada com sucesso!');
     } catch (error) {
       console.error('Error uploading profile photo:', error);
       alert('Erro ao fazer upload da foto. Tente novamente.');
@@ -140,13 +165,46 @@ export const SettingsTab = () => {
     }
   };
 
+  const handleProfileUrlSubmit = async (profileId: string) => {
+    const url = profileUrlInputs[profileId]?.trim();
+    if (!url) {
+      alert('Por favor, insira uma URL válida');
+      return;
+    }
+
+    setUploadingProfile(profileId);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ profile_photo_url: url })
+        .eq('id', profileId);
+
+      if (error) throw error;
+
+      setProfiles(
+        profiles.map((p) =>
+          p.id === profileId ? { ...p, profile_photo_url: url } : p
+        )
+      );
+      setProfileUrlInputs({ ...profileUrlInputs, [profileId]: '' });
+      alert('Foto atualizada com sucesso!');
+    } catch (error) {
+      console.error('Error updating profile photo:', error);
+      alert('Erro ao atualizar foto. Tente novamente.');
+    } finally {
+      setUploadingProfile(null);
+    }
+  };
+
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
+      const settingsId = (await supabase.from('company_settings').select('id').single()).data?.id;
+
       const { error } = await supabase
         .from('company_settings')
         .update({ company_name: settings.company_name })
-        .eq('id', (await supabase.from('company_settings').select('id').single()).data?.id);
+        .eq('id', settingsId);
 
       if (error) throw error;
       alert('Configurações salvas com sucesso!');
@@ -202,13 +260,13 @@ export const SettingsTab = () => {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Logo da Empresa
             </label>
-            <div className="flex items-center gap-6">
+            <div className="flex items-start gap-6">
               {settings.company_logo_url ? (
                 <div className="relative">
                   <img
                     src={settings.company_logo_url}
                     alt="Logo"
-                    className="w-32 h-32 object-contain rounded-lg border-2 border-gray-200"
+                    className="w-32 h-32 object-contain rounded-lg border-2 border-gray-200 bg-white"
                   />
                   <button
                     onClick={() => setSettings({ ...settings, company_logo_url: null })}
@@ -223,22 +281,51 @@ export const SettingsTab = () => {
                 </div>
               )}
 
-              <label className="cursor-pointer">
-                <div className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition flex items-center gap-2">
-                  <Upload className="w-5 h-5" />
-                  {uploadingLogo ? 'Enviando...' : 'Fazer Upload'}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                  disabled={uploadingLogo}
-                />
-              </label>
+              <div className="flex-1 space-y-3">
+                <label className="cursor-pointer">
+                  <div className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition flex items-center gap-2 justify-center">
+                    <Upload className="w-5 h-5" />
+                    {uploadingLogo ? 'Enviando...' : 'Upload do Computador'}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    disabled={uploadingLogo}
+                  />
+                </label>
+
+                <button
+                  onClick={() => setShowLogoUrlInput(!showLogoUrlInput)}
+                  className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition flex items-center gap-2 justify-center"
+                >
+                  <LinkIcon className="w-5 h-5" />
+                  Usar URL de Imagem
+                </button>
+
+                {showLogoUrlInput && (
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={logoUrlInput}
+                      onChange={(e) => setLogoUrlInput(e.target.value)}
+                      placeholder="https://exemplo.com/logo.png"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={handleLogoUrlSubmit}
+                      disabled={uploadingLogo}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
+                    >
+                      OK
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              PNG, JPG ou GIF. Máximo 2MB. Recomendado: 400x400px
+              Upload: PNG, JPG ou GIF (máx 2MB) | URL: Link direto para imagem
             </p>
           </div>
 
@@ -275,11 +362,29 @@ export const SettingsTab = () => {
               <div className="flex flex-col items-center">
                 <div className="relative mb-4">
                   {profile.profile_photo_url ? (
-                    <img
-                      src={profile.profile_photo_url}
-                      alt={profile.full_name}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
-                    />
+                    <div className="relative">
+                      <img
+                        src={profile.profile_photo_url}
+                        alt={profile.full_name}
+                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
+                      />
+                      <button
+                        onClick={async () => {
+                          await supabase
+                            .from('profiles')
+                            .update({ profile_photo_url: null })
+                            .eq('id', profile.id);
+                          setProfiles(
+                            profiles.map((p) =>
+                              p.id === profile.id ? { ...p, profile_photo_url: null } : p
+                            )
+                          );
+                        }}
+                        className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center border-4 border-gray-200">
                       <span className="text-3xl font-bold text-white">
@@ -300,11 +405,29 @@ export const SettingsTab = () => {
                 </div>
 
                 <h4 className="font-bold text-gray-800 text-center">{profile.full_name}</h4>
-                <p className="text-sm text-gray-500">{profile.email}</p>
+                <p className="text-sm text-gray-500 mb-3">{profile.email}</p>
 
-                {uploadingProfile === profile.id && (
-                  <div className="mt-2">
-                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent"></div>
+                {uploadingProfile === profile.id ? (
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent"></div>
+                ) : (
+                  <div className="w-full space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={profileUrlInputs[profile.id] || ''}
+                        onChange={(e) =>
+                          setProfileUrlInputs({ ...profileUrlInputs, [profile.id]: e.target.value })
+                        }
+                        placeholder="URL da foto"
+                        className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        onClick={() => handleProfileUrlSubmit(profile.id)}
+                        className="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition"
+                      >
+                        OK
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

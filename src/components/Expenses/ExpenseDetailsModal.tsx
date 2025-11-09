@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet } from 'lucide-react';
+import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet, Edit } from 'lucide-react';
 import { supabase, Expense, InstallmentPayment, PaymentContribution, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { DeleteExpenseModal } from './DeleteExpenseModal';
+import { EditInstallmentModal } from './EditInstallmentModal';
 
 interface ExpenseDetailsModalProps {
   expense: Expense;
@@ -24,6 +25,10 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editModal, setEditModal] = useState<{
+    show: boolean;
+    installment?: InstallmentPayment;
+  }>({ show: false });
   const [paymentModal, setPaymentModal] = useState<{
     show: boolean;
     installment?: InstallmentPayment;
@@ -79,6 +84,10 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
 
   const handleAddPayment = (installment: InstallmentPayment) => {
     setPaymentModal({ show: true, installment });
+  };
+
+  const handleEditInstallment = (installment: InstallmentPayment) => {
+    setEditModal({ show: true, installment });
   };
 
   const statusConfig = {
@@ -266,15 +275,24 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
                         </div>
                       )}
 
-                      {installment.status !== 'paid' && (
+                      <div className="flex gap-2 mt-2">
                         <button
-                          onClick={() => handleAddPayment(installment)}
-                          className="w-full mt-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition flex items-center justify-center gap-2"
+                          onClick={() => handleEditInstallment(installment)}
+                          className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition flex items-center justify-center gap-2"
                         >
-                          <DollarSign className="w-4 h-4" />
-                          Registrar Pagamento
+                          <Edit className="w-4 h-4" />
+                          Editar
                         </button>
-                      )}
+                        {installment.status !== 'paid' && (
+                          <button
+                            onClick={() => handleAddPayment(installment)}
+                            className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition flex items-center justify-center gap-2"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                            Pagar
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -293,6 +311,18 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
             loadData();
             onUpdate();
             setPaymentModal({ show: false });
+          }}
+        />
+      )}
+
+      {editModal.show && editModal.installment && (
+        <EditInstallmentModal
+          installment={editModal.installment}
+          onClose={() => setEditModal({ show: false })}
+          onSuccess={() => {
+            loadData();
+            onUpdate();
+            setEditModal({ show: false });
           }}
         />
       )}

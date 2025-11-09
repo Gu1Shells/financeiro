@@ -5,6 +5,7 @@ import { OverviewTab } from './OverviewTab';
 import { ExpensesTab } from '../Expenses/ExpensesTab';
 import { ReportsTab } from '../Reports/ReportsTab';
 import { MembersTab } from '../Members/MembersTab';
+import { SettingsTab } from '../Settings/SettingsTab';
 import { NewExpenseModal } from '../Expenses/NewExpenseModal';
 import { ExpenseDetailsModal } from '../Expenses/ExpenseDetailsModal';
 import { Expense } from '../../lib/supabase';
@@ -38,6 +39,7 @@ export const Dashboard = () => {
           {activeTab === 'expenses' && <ExpensesTab onExpenseClick={handleExpenseClick} />}
           {activeTab === 'reports' && <ReportsTab />}
           {activeTab === 'members' && <MembersTab />}
+          {activeTab === 'settings' && <SettingsTab />}
         </div>
       </main>
 

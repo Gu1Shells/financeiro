@@ -279,13 +279,13 @@ export const PaymentStatusReport = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Total Pago:</span>
                       <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                        R$ {Number(summary.total_paid).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {(Number(summary.total_paid) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Dívida Pendente:</span>
                       <span className="text-sm font-bold text-red-600 dark:text-red-400">
-                        R$ {Number(summary.total_debt).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {(Number(summary.total_debt) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>

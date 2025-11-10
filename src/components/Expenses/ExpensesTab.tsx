@@ -107,10 +107,10 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
           {filteredExpenses.map((expense) => {
             const IconComponent = iconMap[expense.category?.icon || 'tag'] || Tag;
             const priorityConfig = {
-              baixa: { label: 'Baixa', color: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
-              media: { label: 'Média', color: 'bg-blue-100 text-blue-700 border-blue-300' },
-              alta: { label: 'Alta', color: 'bg-amber-100 text-amber-700 border-amber-300' },
-              urgente: { label: 'Urgente', color: 'bg-red-100 text-red-700 border-red-300' },
+              baixa: { label: 'Baixa', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700' },
+              media: { label: 'Média', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-700' },
+              alta: { label: 'Alta', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300 dark:border-amber-700' },
+              urgente: { label: 'Urgente', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-700' },
             };
             const priority = priorityConfig[expense.priority || 'media'];
 
@@ -132,7 +132,7 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
                       {priority.label}
                     </span>
                     {expense.is_fixed && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded border border-blue-300">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-semibold rounded border border-blue-300 dark:border-blue-700">
                         Fixa
                       </span>
                     )}

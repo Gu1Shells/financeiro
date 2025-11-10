@@ -538,7 +538,7 @@ export const PaymentStatusReport = () => {
                                   PAGA
                                 </span>
                               )}
-                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                              <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium whitespace-nowrap border border-blue-200 dark:border-blue-700">
                                 {status.expense_category}
                               </span>
                             </div>

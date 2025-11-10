@@ -32,13 +32,14 @@ export const PaidExpensesTab = () => {
           .from('installment_payments')
           .select(`
             *,
-            expense:expenses(
+            expense:expenses!inner(
               *,
               category:expense_categories(*),
               creator:profiles!expenses_created_by_fkey(*)
             )
           `)
           .eq('status', 'paid')
+          .is('expense.deleted_at', null)
           .order('updated_at', { ascending: false })
       ]);
 

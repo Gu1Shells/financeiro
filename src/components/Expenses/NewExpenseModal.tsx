@@ -165,16 +165,12 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
       return;
     }
 
-    if (formData.is_fixed && !formData.total_amount) {
-      toast.info('Despesa fixa criada! O valor poderá ser informado no momento do pagamento.');
-    }
-
     setLoading(true);
     try {
       const { error } = await supabase.from('expenses').insert([
         {
           title: formData.title,
-          total_amount: totalAmount,
+          total_amount: totalAmount > 0 ? totalAmount : 0.01,
           category_id: formData.category_id,
           created_by: user.id,
           installments: remainingInstallments,
@@ -193,6 +189,12 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
       ]);
 
       if (error) throw error;
+
+      if (formData.is_fixed && totalAmount === 0) {
+        toast.info('Despesa fixa criada! O valor poderá ser informado no momento do pagamento.');
+      } else {
+        toast.success('Despesa criada com sucesso!');
+      }
 
       onSuccess();
       onClose();

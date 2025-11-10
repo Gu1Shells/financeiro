@@ -10,28 +10,28 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.08),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(16,185,129,0.08),transparent_50%)]"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.02),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.02),transparent_50%)]"></div>
 
         <div className="relative z-10 text-center space-y-8">
           <div className="space-y-4">
             <WaveLoader
               bars={7}
               message=""
-              className="bg-gradient-to-r from-emerald-400 to-teal-400 shadow-lg shadow-emerald-500/50"
+              className="bg-white shadow-lg shadow-white/20"
             />
           </div>
 
           <div className="space-y-2">
-            <p className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <p className="text-xl font-bold text-white">
               Carregando
             </p>
             <div className="flex items-center justify-center gap-1">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse delay-100" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse delay-200" style={{ animationDelay: '0.4s' }}></div>
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-100" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-200" style={{ animationDelay: '0.4s' }}></div>
             </div>
           </div>
         </div>

@@ -167,10 +167,14 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
 
     setLoading(true);
     try {
+      const { data: profilesData } = await supabase.from('profiles').select('id');
+      const totalMembers = profilesData?.length || 2;
+      const minAmount = totalMembers * 0.01;
+
       const { error } = await supabase.from('expenses').insert([
         {
           title: formData.title,
-          total_amount: totalAmount > 0 ? totalAmount : 0.01,
+          total_amount: totalAmount > 0 ? totalAmount : minAmount,
           category_id: formData.category_id,
           created_by: user.id,
           installments: remainingInstallments,

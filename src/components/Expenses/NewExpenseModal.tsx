@@ -211,28 +211,28 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-bold text-gray-800">Nova Despesa</h2>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Nova Despesa</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
           >
-            <X className="w-6 h-6 text-gray-600" />
+            <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Título da Despesa *
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="Ex: Ar Condicionado"
               required
             />
@@ -262,14 +262,14 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Categoria *
               </label>
               <div className="flex gap-2">
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 >
                   {categories.map((cat) => (
@@ -291,13 +291,13 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Quem realizou a compra? *
             </label>
             <select
               value={formData.purchased_by}
               onChange={(e) => setFormData({ ...formData, purchased_by: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             >
               <option value="">Selecione...</option>
@@ -307,7 +307,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Quem passou no cartão ou pagou à vista
             </p>
           </div>
@@ -325,10 +325,10 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
             </button>
 
             {showDownPayment && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-4">
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Valor da Entrada (R$)
                     </label>
                     <input
@@ -338,19 +338,19 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                       max={formData.total_amount}
                       value={formData.down_payment_amount}
                       onChange={(e) => setFormData({ ...formData, down_payment_amount: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="2000.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Forma de Pagamento da Entrada
                     </label>
                     <select
                       value={formData.down_payment_method_id}
                       onChange={(e) => setFormData({ ...formData, down_payment_method_id: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       {paymentMethods.map((method) => (
                         <option key={method.id} value={method.id}>
@@ -362,7 +362,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Parcelas da Entrada
                   </label>
                   <input
@@ -370,9 +370,9 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                     min="1"
                     value={formData.down_payment_installments}
                     onChange={(e) => setFormData({ ...formData, down_payment_installments: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
-                  <p className="text-xs text-emerald-700 mt-1">
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
                     {downPaymentAmount > 0
                       ? `${downPaymentInstallments}x de R$ ${downPaymentPerInstallment.toFixed(2)}`
                       : 'Informe o valor da entrada'}
@@ -384,13 +384,13 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Forma de Pagamento do Restante *
               </label>
               <select
                 value={formData.remaining_payment_method_id}
                 onChange={(e) => setFormData({ ...formData, remaining_payment_method_id: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               >
                 {paymentMethods.map((method) => (
@@ -402,7 +402,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Parcelas do Restante *
               </label>
               <input
@@ -410,10 +410,10 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 min="1"
                 value={formData.installments}
                 onChange={(e) => setFormData({ ...formData, installments: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {remainingInstallments}x de R$ {remainingPerInstallment.toFixed(2)}
               </p>
             </div>
@@ -431,7 +431,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
             </button>
 
             {showAdvanced && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4 space-y-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -440,10 +440,10 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                     className="w-5 h-5 text-amber-600 rounded focus:ring-2 focus:ring-amber-500"
                   />
                   <div>
-                    <span className="text-sm font-medium text-amber-900">
+                    <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
                       Aplicar juros por atraso
                     </span>
-                    <p className="text-xs text-amber-700 mt-0.5">
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
                       Cobra juros automáticos para pagamentos atrasados
                     </p>
                   </div>
@@ -451,7 +451,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
 
                 {formData.apply_late_fees && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Taxa de juros por dia (%)
                     </label>
                     <input
@@ -460,9 +460,9 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                       min="0"
                       value={formData.late_fee_percentage}
                       onChange={(e) => setFormData({ ...formData, late_fee_percentage: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
-                    <p className="text-xs text-amber-700 mt-1">
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
                       Padrão: 0.033% ao dia (taxa de maquininha = ~1% ao mês)
                     </p>
                   </div>
@@ -472,12 +472,12 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
           </div>
 
           {totalAmount > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
                 Resumo do Parcelamento
               </h3>
-              <div className="space-y-1 text-sm text-blue-800">
+              <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
                 <div className="flex justify-between">
                   <span>Valor Total:</span>
                   <span className="font-semibold">R$ {totalAmount.toFixed(2)}</span>
@@ -494,7 +494,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                     </div>
                   </>
                 )}
-                <div className="flex justify-between pt-2 border-t border-blue-300">
+                <div className="flex justify-between pt-2 border-t border-blue-300 dark:border-blue-600">
                   <span className="font-semibold">Total de Parcelas:</span>
                   <span className="font-bold">{totalInstallments}x</span>
                 </div>
@@ -503,20 +503,20 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Data de Início *
             </label>
             <input
               type="date"
               value={formData.start_date}
               onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Prioridade *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -525,8 +525,8 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 onClick={() => setFormData({ ...formData, priority: 'baixa' })}
                 className={`p-3 rounded-lg border-2 transition font-medium ${
                   formData.priority === 'baixa'
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                 }`}
               >
                 Baixa
@@ -536,8 +536,8 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 onClick={() => setFormData({ ...formData, priority: 'media' })}
                 className={`p-3 rounded-lg border-2 transition font-medium ${
                   formData.priority === 'media'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                 }`}
               >
                 Média
@@ -547,8 +547,8 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 onClick={() => setFormData({ ...formData, priority: 'alta' })}
                 className={`p-3 rounded-lg border-2 transition font-medium ${
                   formData.priority === 'alta'
-                    ? 'border-amber-500 bg-amber-50 text-amber-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                 }`}
               >
                 Alta
@@ -558,8 +558,8 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 onClick={() => setFormData({ ...formData, priority: 'urgente' })}
                 className={`p-3 rounded-lg border-2 transition font-medium ${
                   formData.priority === 'urgente'
-                    ? 'border-red-500 bg-red-50 text-red-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                 }`}
               >
                 Urgente
@@ -575,20 +575,20 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 onChange={(e) => setFormData({ ...formData, is_fixed: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Despesa fixa mensal (ex: aluguel, água, luz)
               </span>
             </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Observações
             </label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               rows={3}
               placeholder="Detalhes adicionais sobre a despesa..."
             />
@@ -598,14 +598,14 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition"
+              className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-700 transition disabled:opacity-50 shadow-lg"
             >
               <Save className="w-5 h-5" />
               {loading ? 'Salvando...' : 'Salvar Despesa'}
@@ -615,7 +615,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
       </div>
 
       {showNewCategory && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
             <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Nova Categoria</h3>

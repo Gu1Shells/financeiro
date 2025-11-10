@@ -25,6 +25,21 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
 
   useEffect(() => {
     loadExpenses();
+
+    const channel = supabase
+      .channel('expenses-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses' },
+        () => {
+          loadExpenses();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadExpenses = async () => {

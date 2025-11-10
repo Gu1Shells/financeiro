@@ -229,46 +229,64 @@ export const SettingsTab = () => {
       const { error: contribError } = await supabase
         .from('payment_contributions')
         .delete()
-        .gte('created_at', '1900-01-01');
-      if (contribError) throw contribError;
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (contribError) {
+        console.error('Error deleting payment_contributions:', contribError);
+        throw new Error(`Erro ao deletar contribuições: ${contribError.message}`);
+      }
 
       const { error: historyError } = await supabase
         .from('installment_edit_history')
         .delete()
-        .gte('edited_at', '1900-01-01');
-      if (historyError) throw historyError;
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (historyError) {
+        console.error('Error deleting installment_edit_history:', historyError);
+        throw new Error(`Erro ao deletar histórico: ${historyError.message}`);
+      }
 
       const { error: installmentsError } = await supabase
         .from('installment_payments')
         .delete()
-        .gte('created_at', '1900-01-01');
-      if (installmentsError) throw installmentsError;
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (installmentsError) {
+        console.error('Error deleting installment_payments:', installmentsError);
+        throw new Error(`Erro ao deletar parcelas: ${installmentsError.message}`);
+      }
 
       const { error: deletionLogsError } = await supabase
         .from('expense_deletion_logs')
         .delete()
-        .gte('deleted_at', '1900-01-01');
-      if (deletionLogsError) throw deletionLogsError;
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (deletionLogsError) {
+        console.error('Error deleting expense_deletion_logs:', deletionLogsError);
+        throw new Error(`Erro ao deletar logs de exclusão: ${deletionLogsError.message}`);
+      }
 
       const { error: expensesError } = await supabase
         .from('expenses')
         .delete()
-        .gte('created_at', '1900-01-01');
-      if (expensesError) throw expensesError;
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (expensesError) {
+        console.error('Error deleting expenses:', expensesError);
+        throw new Error(`Erro ao deletar despesas: ${expensesError.message}`);
+      }
 
       const { error: auditError } = await supabase
         .from('audit_logs')
         .delete()
-        .gte('created_at', '1900-01-01');
-      if (auditError) throw auditError;
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (auditError) {
+        console.error('Error deleting audit_logs:', auditError);
+        throw new Error(`Erro ao deletar logs de auditoria: ${auditError.message}`);
+      }
 
       toast.success('Sistema zerado com sucesso! Todos os dados financeiros foram removidos.');
       setShowResetModal(false);
       setResetStep(1);
       window.location.reload();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resetting system:', error);
-      toast.error('Erro ao zerar o sistema. Tente novamente.');
+      toast.error(error.message || 'Erro ao zerar o sistema. Tente novamente.');
     } finally {
       setResetting(false);
     }

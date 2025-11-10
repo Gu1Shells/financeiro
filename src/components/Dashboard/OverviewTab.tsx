@@ -88,8 +88,10 @@ export const OverviewTab = () => {
       let expensesListQuery = supabase
         .from('expenses')
         .select('*, category:expense_categories(*), creator:profiles!created_by(*)')
+        .in('status', ['active', 'paid'])
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
       if (startDate) {
         expensesListQuery = expensesListQuery.gte('created_at', startDate);
@@ -99,7 +101,15 @@ export const OverviewTab = () => {
       }
 
       const { data: expenses } = await expensesListQuery;
-      setRecentExpenses(expenses || []);
+
+      const filteredExpenses = (expenses || []).filter(expense => {
+        if (expense.is_fixed && expense.status === 'paid') {
+          return false;
+        }
+        return true;
+      }).slice(0, 5);
+
+      setRecentExpenses(filteredExpenses);
 
       const today = new Date();
       const next7Days = new Date();

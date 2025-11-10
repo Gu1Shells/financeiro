@@ -59,9 +59,9 @@ export const RefundPaymentModal = ({ isOpen, onClose, contribution, onRefund }: 
       onRefund();
       onClose();
       setReason('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refunding payment:', error);
-      showToast('Erro ao estornar pagamento', 'error');
+      showToast(error?.message || 'Erro ao estornar pagamento', 'error');
     } finally {
       setIsSubmitting(false);
     }

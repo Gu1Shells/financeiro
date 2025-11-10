@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet, Edit, Unlock } from 'lucide-react';
+import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet, Edit, Unlock, Undo2, Layers } from 'lucide-react';
 import { supabase, Expense, InstallmentPayment, PaymentContribution, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { DeleteExpenseModal } from './DeleteExpenseModal';
 import { EditInstallmentModal } from './EditInstallmentModal';
 import { ReopenInstallmentModal } from './ReopenInstallmentModal';
+import { RefundPaymentModal } from './RefundPaymentModal';
+import { BulkPaymentModal } from './BulkPaymentModal';
 
 interface ExpenseDetailsModalProps {
   expense: Expense;
@@ -40,6 +42,11 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
     show: boolean;
     installment?: InstallmentPayment;
   }>({ show: false });
+  const [refundModal, setRefundModal] = useState<{
+    show: boolean;
+    contribution?: any;
+  }>({ show: false });
+  const [showBulkPayment, setShowBulkPayment] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -124,6 +131,13 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowBulkPayment(true)}
+                className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition text-emerald-600 dark:text-emerald-400"
+                title="Quitação múltipla"
+              >
+                <Layers className="w-5 h-5" />
+              </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition text-red-600 dark:text-red-400"
@@ -272,7 +286,7 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
                           {installmentContribs.map((contrib) => (
                             <div
                               key={contrib.id}
-                              className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-lg"
+                              className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-lg group"
                             >
                               <div className="flex items-center gap-2">
                                 <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -280,9 +294,27 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
                                   {contrib.user?.full_name}
                                 </span>
                               </div>
-                              <span className="text-sm font-semibold text-gray-800 dark:text-white">
-                                R$ {Number(contrib.amount).toFixed(2)}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                                  R$ {Number(contrib.amount).toFixed(2)}
+                                </span>
+                                <button
+                                  onClick={() => setRefundModal({
+                                    show: true,
+                                    contribution: {
+                                      id: contrib.id,
+                                      amount: contrib.amount,
+                                      user_name: contrib.user?.full_name,
+                                      expense_title: expense.title,
+                                      installment_number: installment.installment_number
+                                    }
+                                  })}
+                                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-red-600 dark:text-red-400 transition"
+                                  title="Estornar pagamento"
+                                >
+                                  <Undo2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -373,6 +405,30 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
           }}
         />
       )}
+
+      {refundModal.show && refundModal.contribution && (
+        <RefundPaymentModal
+          isOpen={refundModal.show}
+          onClose={() => setRefundModal({ show: false })}
+          contribution={refundModal.contribution}
+          onRefund={() => {
+            setRefundModal({ show: false });
+            loadData();
+            onUpdate();
+          }}
+        />
+      )}
+
+      <BulkPaymentModal
+        isOpen={showBulkPayment}
+        onClose={() => setShowBulkPayment(false)}
+        expenseId={expense.id}
+        onSuccess={() => {
+          setShowBulkPayment(false);
+          loadData();
+          onUpdate();
+        }}
+      />
     </>
   );
 };
@@ -386,14 +442,39 @@ interface PaymentModalProps {
 
 const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModalProps) => {
   const { user } = useAuth();
-  const [amount, setAmount] = useState('');
+  const { showToast } = useToast();
   const [selectedUser, setSelectedUser] = useState(user?.id || '');
   const [payForAll, setPayForAll] = useState(false);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [existingContributions, setExistingContributions] = useState<PaymentContribution[]>([]);
 
   const numProfiles = profiles.length;
   const amountPerPerson = numProfiles > 0 ? Number(installment.amount) / numProfiles : 0;
+
+  useEffect(() => {
+    loadExistingContributions();
+  }, [installment.id]);
+
+  const loadExistingContributions = async () => {
+    const { data } = await supabase
+      .from('payment_contributions')
+      .select('*, user:profiles(*)')
+      .eq('installment_id', installment.id);
+    setExistingContributions(data || []);
+  };
+
+  const totalPaid = existingContributions.reduce((sum, c) => sum + Number(c.amount), 0);
+  const remainingAmount = Number(installment.amount) - totalPaid;
+  const userContribution = existingContributions.find(c => c.user_id === selectedUser);
+  const userShare = remainingAmount > 0 ? Math.min(amountPerPerson, remainingAmount) : 0;
+  const suggestedAmount = userContribution ? 0 : userShare;
+
+  const [amount, setAmount] = useState(suggestedAmount.toFixed(2));
+
+  useEffect(() => {
+    setAmount(suggestedAmount.toFixed(2));
+  }, [selectedUser, suggestedAmount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -411,21 +492,29 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
         const { error } = await supabase.from('payment_contributions').insert(contributions);
         if (error) throw error;
       } else {
+        const paymentAmount = parseFloat(amount);
+        if (paymentAmount > remainingAmount) {
+          showToast('O valor não pode ser maior que o valor restante da parcela', 'error');
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.from('payment_contributions').insert([
           {
             installment_id: installment.id,
             user_id: selectedUser,
-            amount: parseFloat(amount),
+            amount: paymentAmount,
             notes: notes || null,
           },
         ]);
         if (error) throw error;
       }
 
+      showToast('Pagamento registrado com sucesso', 'success');
       onSuccess();
     } catch (error) {
       console.error('Error adding payment:', error);
-      toast.error('Erro ao registrar pagamento');
+      showToast('Erro ao registrar pagamento', 'error');
     } finally {
       setLoading(false);
     }
@@ -491,19 +580,29 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
                 type="number"
                 step="0.01"
                 min="0.01"
-                max={Number(installment.amount)}
+                max={remainingAmount}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="0.00"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Valor da parcela: R$ {Number(installment.amount).toFixed(2)}
-              </p>
-              <p className="text-xs text-emerald-600 mt-1">
-                Sugestão (dividido): R$ {amountPerPerson.toFixed(2)}
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-xs text-gray-500">
+                  Valor total da parcela: R$ {Number(installment.amount).toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Já pago: R$ {totalPaid.toFixed(2)}
+                </p>
+                <p className="text-xs font-semibold text-emerald-600">
+                  Falta pagar: R$ {remainingAmount.toFixed(2)}
+                </p>
+                {suggestedAmount > 0 && (
+                  <p className="text-xs text-blue-600">
+                    Sugestão para {profiles.find(p => p.id === selectedUser)?.full_name}: R$ {suggestedAmount.toFixed(2)}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

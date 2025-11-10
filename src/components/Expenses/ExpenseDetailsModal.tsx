@@ -465,10 +465,12 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
   };
 
   const totalPaid = existingContributions.reduce((sum, c) => sum + Number(c.amount), 0);
-  const remainingAmount = Number(installment.amount) - totalPaid;
+  const remainingAmount = Math.max(0, Number(installment.amount) - totalPaid);
   const userContribution = existingContributions.find(c => c.user_id === selectedUser);
   const userShare = remainingAmount > 0 ? Math.min(amountPerPerson, remainingAmount) : 0;
   const suggestedAmount = userContribution ? 0 : userShare;
+
+  const roundToTwo = (num: number) => Math.round(num * 100) / 100;
 
   const [amount, setAmount] = useState(suggestedAmount.toFixed(2));
 
@@ -493,17 +495,21 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
         if (error) throw error;
       } else {
         const paymentAmount = parseFloat(amount);
-        if (paymentAmount > remainingAmount) {
+        const tolerance = 0.01;
+
+        if (paymentAmount > remainingAmount + tolerance) {
           showToast('O valor não pode ser maior que o valor restante da parcela', 'error');
           setLoading(false);
           return;
         }
 
+        const finalAmount = Math.min(paymentAmount, remainingAmount);
+
         const { error } = await supabase.from('payment_contributions').insert([
           {
             installment_id: installment.id,
             user_id: selectedUser,
-            amount: paymentAmount,
+            amount: roundToTwo(finalAmount),
             notes: notes || null,
           },
         ]);

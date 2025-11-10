@@ -3,6 +3,7 @@ import { Upload, Building2, Users, Camera, Save, X, Link as LinkIcon, Moon, Sun,
 import { supabase, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '../../contexts/ToastContext';
 
 interface CompanySettings {
   company_name: string;
@@ -12,6 +13,7 @@ interface CompanySettings {
 export const SettingsTab = () => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const toast = useToast();
   const [settings, setSettings] = useState<CompanySettings>({
     company_name: 'Minha Empresa',
     company_logo_url: null,
@@ -67,12 +69,12 @@ export const SettingsTab = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione uma imagem válida');
+      toast.warning('Por favor, selecione uma imagem válida');
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 2MB');
+      toast.error('A imagem deve ter no máximo 2MB');
       return;
     }
 
@@ -90,10 +92,10 @@ export const SettingsTab = () => {
       if (error) throw error;
 
       setSettings({ ...settings, company_logo_url: base64 });
-      alert('Logo enviada com sucesso!');
+      toast.success('Logo enviada com sucesso!');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      alert('Erro ao fazer upload da logo. Tente novamente.');
+      toast.error('Erro ao fazer upload da logo. Tente novamente.');
     } finally {
       setUploadingLogo(false);
     }
@@ -101,7 +103,7 @@ export const SettingsTab = () => {
 
   const handleLogoUrlSubmit = async () => {
     if (!logoUrlInput.trim()) {
-      alert('Por favor, insira uma URL válida');
+      toast.warning('Por favor, insira uma URL válida');
       return;
     }
 
@@ -119,10 +121,10 @@ export const SettingsTab = () => {
       setSettings({ ...settings, company_logo_url: logoUrlInput.trim() });
       setLogoUrlInput('');
       setShowLogoUrlInput(false);
-      alert('Logo atualizada com sucesso!');
+      toast.success('Logo atualizada com sucesso!');
     } catch (error) {
       console.error('Error updating logo:', error);
-      alert('Erro ao atualizar logo. Tente novamente.');
+      toast.error('Erro ao atualizar logo. Tente novamente.');
     } finally {
       setUploadingLogo(false);
     }
@@ -136,12 +138,12 @@ export const SettingsTab = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione uma imagem válida');
+      toast.warning('Por favor, selecione uma imagem válida');
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 2MB');
+      toast.error('A imagem deve ter no máximo 2MB');
       return;
     }
 
@@ -161,10 +163,10 @@ export const SettingsTab = () => {
           p.id === profileId ? { ...p, profile_photo_url: base64 } : p
         )
       );
-      alert('Foto atualizada com sucesso!');
+      toast.success('Foto atualizada com sucesso!');
     } catch (error) {
       console.error('Error uploading profile photo:', error);
-      alert('Erro ao fazer upload da foto. Tente novamente.');
+      toast.error('Erro ao fazer upload da foto. Tente novamente.');
     } finally {
       setUploadingProfile(null);
     }
@@ -173,7 +175,7 @@ export const SettingsTab = () => {
   const handleProfileUrlSubmit = async (profileId: string) => {
     const url = profileUrlInputs[profileId]?.trim();
     if (!url) {
-      alert('Por favor, insira uma URL válida');
+      toast.warning('Por favor, insira uma URL válida');
       return;
     }
 
@@ -192,10 +194,10 @@ export const SettingsTab = () => {
         )
       );
       setProfileUrlInputs({ ...profileUrlInputs, [profileId]: '' });
-      alert('Foto atualizada com sucesso!');
+      toast.success('Foto atualizada com sucesso!');
     } catch (error) {
       console.error('Error updating profile photo:', error);
-      alert('Erro ao atualizar foto. Tente novamente.');
+      toast.error('Erro ao atualizar foto. Tente novamente.');
     } finally {
       setUploadingProfile(null);
     }
@@ -212,10 +214,10 @@ export const SettingsTab = () => {
         .eq('id', settingsId);
 
       if (error) throw error;
-      alert('Configurações salvas com sucesso!');
+      toast.success('Configurações salvas com sucesso!');
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configurações');
     } finally {
       setSaving(false);
     }
@@ -260,13 +262,13 @@ export const SettingsTab = () => {
         .gte('created_at', '1900-01-01');
       if (auditError) throw auditError;
 
-      alert('Sistema zerado com sucesso! Todos os dados financeiros foram removidos.');
+      toast.success('Sistema zerado com sucesso! Todos os dados financeiros foram removidos.');
       setShowResetModal(false);
       setResetStep(1);
       window.location.reload();
     } catch (error) {
       console.error('Error resetting system:', error);
-      alert('Erro ao zerar o sistema. Verifique se há dados vinculados ou tente novamente.');
+      toast.error('Erro ao zerar o sistema. Tente novamente.');
     } finally {
       setResetting(false);
     }

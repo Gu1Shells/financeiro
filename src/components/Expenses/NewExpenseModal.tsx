@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Save, CreditCard, Wallet, ChevronDown, ChevronUp, User, Percent, Plus } from 'lucide-react';
 import { supabase, ExpenseCategory, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 
 interface NewExpenseModalProps {
   onClose: () => void;
@@ -18,6 +19,7 @@ interface PaymentMethod {
 
 export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) => {
   const { user } = useAuth();
+  const toast = useToast();
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -100,7 +102,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
 
   const handleCreateCategory = async () => {
     if (!newCategory.name.trim()) {
-      alert('Por favor, insira um nome para a categoria');
+      toast.warning('Por favor, insira um nome para a categoria');
       return;
     }
 
@@ -122,11 +124,11 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
         setFormData({ ...formData, category_id: data.id });
         setNewCategory({ name: '', color: '#10b981', icon: 'tag' });
         setShowNewCategory(false);
-        alert('Categoria criada com sucesso!');
+        toast.success('Categoria criada com sucesso!');
       }
     } catch (error) {
       console.error('Error creating category:', error);
-      alert('Erro ao criar categoria');
+      toast.error('Erro ao criar categoria');
     }
   };
 
@@ -144,17 +146,17 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
     if (!user) return;
 
     if (downPaymentAmount > totalAmount) {
-      alert('O valor da entrada não pode ser maior que o valor total!');
+      toast.error('O valor da entrada não pode ser maior que o valor total!');
       return;
     }
 
     if (downPaymentAmount < 0) {
-      alert('O valor da entrada não pode ser negativo!');
+      toast.error('O valor da entrada não pode ser negativo!');
       return;
     }
 
     if (!formData.purchased_by) {
-      alert('Por favor, selecione quem realizou a compra!');
+      toast.warning('Por favor, selecione quem realizou a compra!');
       return;
     }
 
@@ -187,7 +189,7 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
       onClose();
     } catch (error) {
       console.error('Error creating expense:', error);
-      alert('Erro ao criar despesa');
+      toast.error('Erro ao criar despesa');
     } finally {
       setLoading(false);
     }

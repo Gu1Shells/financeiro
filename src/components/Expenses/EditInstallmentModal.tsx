@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Save, Edit, AlertTriangle } from 'lucide-react';
 import { supabase, InstallmentPayment } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 
 interface EditInstallmentModalProps {
   installment: InstallmentPayment;
@@ -11,6 +12,7 @@ interface EditInstallmentModalProps {
 
 export const EditInstallmentModal = ({ installment, onClose, onSuccess }: EditInstallmentModalProps) => {
   const { user } = useAuth();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     amount: Number(installment.amount).toFixed(2),
@@ -43,7 +45,7 @@ export const EditInstallmentModal = ({ installment, onClose, onSuccess }: EditIn
       onClose();
     } catch (error) {
       console.error('Error updating installment:', error);
-      alert('Erro ao atualizar parcela');
+      toast.error('Erro ao atualizar parcela');
     } finally {
       setLoading(false);
     }

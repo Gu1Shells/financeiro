@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Calendar, DollarSign, CheckCircle, AlertCircle, Users, Trash2, CreditCard, Wallet, Edit, Unlock } from 'lucide-react';
 import { supabase, Expense, InstallmentPayment, PaymentContribution, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { DeleteExpenseModal } from './DeleteExpenseModal';
 import { EditInstallmentModal } from './EditInstallmentModal';
 import { ReopenInstallmentModal } from './ReopenInstallmentModal';
@@ -20,6 +21,7 @@ interface PaymentMethod {
 
 export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetailsModalProps) => {
   const { user } = useAuth();
+  const toast = useToast();
   const [installments, setInstallments] = useState<InstallmentPayment[]>([]);
   const [contributions, setContributions] = useState<Record<string, PaymentContribution[]>>({});
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -93,7 +95,7 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
 
   const handleEditInstallment = (installment: InstallmentPayment) => {
     if (installment.status === 'paid') {
-      alert('Parcelas pagas não podem ser editadas. Use a opção "Reabrir" se necessário.');
+      toast.warning('Parcelas pagas não podem ser editadas. Use a opção "Reabrir" se necessário.');
       return;
     }
     setEditModal({ show: true, installment });
@@ -423,7 +425,7 @@ const PaymentModal = ({ installment, profiles, onClose, onSuccess }: PaymentModa
       onSuccess();
     } catch (error) {
       console.error('Error adding payment:', error);
-      alert('Erro ao registrar pagamento');
+      toast.error('Erro ao registrar pagamento');
     } finally {
       setLoading(false);
     }

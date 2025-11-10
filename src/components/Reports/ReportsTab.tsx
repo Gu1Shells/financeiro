@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, TrendingDown, Users, PieChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, PieChart, AlertCircle, Calendar, CreditCard } from 'lucide-react';
 import { supabase, Profile } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 import { PaymentStatusReport } from './PaymentStatusReport';
 
 interface UserStats {
@@ -18,10 +19,25 @@ interface CategoryStats {
   count: number;
 }
 
+interface MyDebt {
+  expense_id: string;
+  expense_title: string;
+  expense_category: string;
+  installment_id: string;
+  installment_number: number;
+  installment_amount: number;
+  paid_amount: number;
+  remaining_amount: number;
+  due_date: string;
+  is_late: boolean;
+}
+
 export const ReportsTab = () => {
+  const { user } = useAuth();
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
   const [monthlyData, setMonthlyData] = useState<{ month: string; amount: number }[]>([]);
+  const [myDebts, setMyDebts] = useState<MyDebt[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
 
@@ -32,10 +48,16 @@ export const ReportsTab = () => {
   const loadReports = async () => {
     setLoading(true);
     try {
-      const [profiles, contributions, expenses] = await Promise.all([
+      const [profiles, contributions, expenses, myDebtsRes] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('payment_contributions').select('*, user:profiles(*)'),
         supabase.from('expenses').select('*, category:expense_categories(*)'),
+        user ? supabase
+          .from('user_payment_details')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('user_payment_status', 'pending')
+          .order('due_date', { ascending: true }) : Promise.resolve({ data: [] }),
       ]);
 
       if (profiles.data && contributions.data && expenses.data) {
@@ -113,6 +135,22 @@ export const ReportsTab = () => {
 
         setMonthlyData(sortedMonthly);
       }
+
+      if (myDebtsRes.data) {
+        const debts: MyDebt[] = myDebtsRes.data.map((debt: any) => ({
+          expense_id: debt.expense_id,
+          expense_title: debt.expense_title,
+          expense_category: debt.expense_category,
+          installment_id: debt.installment_id,
+          installment_number: debt.installment_number,
+          installment_amount: Number(debt.installment_amount),
+          paid_amount: Number(debt.paid_amount),
+          remaining_amount: Number(debt.installment_amount) - Number(debt.paid_amount),
+          due_date: debt.due_date,
+          is_late: new Date(debt.due_date) < new Date(),
+        }));
+        setMyDebts(debts);
+      }
     } catch (error) {
       console.error('Error loading reports:', error);
     } finally {
@@ -137,6 +175,85 @@ export const ReportsTab = () => {
       <div className="border-t-4 border-gray-200 dark:border-gray-700 my-8"></div>
 
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Estatísticas Gerais</h2>
+
+      {myDebts.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-gradient-to-br from-red-500 to-rose-600 p-3 rounded-lg">
+              <AlertCircle className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Minhas Dívidas</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {myDebts.length} parcela{myDebts.length !== 1 ? 's' : ''} pendente{myDebts.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="ml-auto text-right">
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total a pagar</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                R$ {myDebts.reduce((sum, d) => sum + d.remaining_amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {myDebts.slice(0, 5).map((debt) => (
+              <div
+                key={debt.installment_id}
+                className={`p-4 rounded-lg border-2 ${
+                  debt.is_late
+                    ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold text-gray-800 dark:text-white">{debt.expense_title}</h4>
+                      {debt.is_late && (
+                        <span className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 px-2 py-0.5 rounded-full font-medium">
+                          ATRASADA
+                        </span>
+                      )}
+                      <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium border border-blue-200 dark:border-blue-700">
+                        {debt.expense_category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <CreditCard className="w-4 h-4" />
+                        Parcela #{debt.installment_number}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        Venc: {new Date(debt.due_date).toLocaleDateString('pt-BR')}
+                      </span>
+                      {debt.is_late && (
+                        <span className="text-red-600 dark:text-red-400 font-medium">
+                          {Math.floor((new Date().getTime() - new Date(debt.due_date).getTime()) / (1000 * 60 * 60 * 24))} dias
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right ml-4">
+                    <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                      R$ {debt.remaining_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      de R$ {debt.installment_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {myDebts.length > 5 && (
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400 pt-2">
+                + {myDebts.length - 5} parcela{myDebts.length - 5 !== 1 ? 's' : ''} adicional{myDebts.length - 5 !== 1 ? 'is' : ''}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2">
         <button

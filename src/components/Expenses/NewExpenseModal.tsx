@@ -145,7 +145,12 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
     e.preventDefault();
     if (!user) return;
 
-    if (downPaymentAmount > totalAmount) {
+    if (!formData.is_fixed && !formData.total_amount) {
+      toast.error('Por favor, informe o valor total da despesa!');
+      return;
+    }
+
+    if (totalAmount > 0 && downPaymentAmount > totalAmount) {
       toast.error('O valor da entrada não pode ser maior que o valor total!');
       return;
     }
@@ -158,6 +163,10 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
     if (!formData.purchased_by) {
       toast.warning('Por favor, selecione quem realizou a compra!');
       return;
+    }
+
+    if (formData.is_fixed && !formData.total_amount) {
+      toast.info('Despesa fixa criada! O valor poderá ser informado no momento do pagamento.');
     }
 
     setLoading(true);
@@ -225,8 +234,9 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Valor Total (R$) *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Valor Total (R$) {!formData.is_fixed && '*'}
+                {formData.is_fixed && <span className="text-xs text-gray-500 dark:text-gray-400">(opcional para despesas fixas)</span>}
               </label>
               <input
                 type="number"
@@ -234,10 +244,15 @@ export const NewExpenseModal = ({ onClose, onSuccess }: NewExpenseModalProps) =>
                 min="0"
                 value={formData.total_amount}
                 onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                placeholder="6000.00"
-                required
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder={formData.is_fixed ? "Deixe em branco se o valor varia mensalmente" : "6000.00"}
+                required={!formData.is_fixed}
               />
+              {formData.is_fixed && !formData.total_amount && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  O valor poderá ser informado no momento do pagamento
+                </p>
+              )}
             </div>
 
             <div>

@@ -226,58 +226,11 @@ export const SettingsTab = () => {
   const handleResetSystem = async () => {
     setResetting(true);
     try {
-      const { error: contribError } = await supabase
-        .from('payment_contributions')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      if (contribError) {
-        console.error('Error deleting payment_contributions:', contribError);
-        throw new Error(`Erro ao deletar contribuições: ${contribError.message}`);
-      }
+      const { error } = await supabase.rpc('reset_system');
 
-      const { error: historyError } = await supabase
-        .from('installment_edit_history')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      if (historyError) {
-        console.error('Error deleting installment_edit_history:', historyError);
-        throw new Error(`Erro ao deletar histórico: ${historyError.message}`);
-      }
-
-      const { error: installmentsError } = await supabase
-        .from('installment_payments')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      if (installmentsError) {
-        console.error('Error deleting installment_payments:', installmentsError);
-        throw new Error(`Erro ao deletar parcelas: ${installmentsError.message}`);
-      }
-
-      const { error: deletionLogsError } = await supabase
-        .from('expense_deletion_logs')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      if (deletionLogsError) {
-        console.error('Error deleting expense_deletion_logs:', deletionLogsError);
-        throw new Error(`Erro ao deletar logs de exclusão: ${deletionLogsError.message}`);
-      }
-
-      const { error: expensesError } = await supabase
-        .from('expenses')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      if (expensesError) {
-        console.error('Error deleting expenses:', expensesError);
-        throw new Error(`Erro ao deletar despesas: ${expensesError.message}`);
-      }
-
-      const { error: auditError } = await supabase
-        .from('audit_logs')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      if (auditError) {
-        console.error('Error deleting audit_logs:', auditError);
-        throw new Error(`Erro ao deletar logs de auditoria: ${auditError.message}`);
+      if (error) {
+        console.error('Error resetting system:', error);
+        throw new Error(`Erro ao zerar o sistema: ${error.message}`);
       }
 
       toast.success('Sistema zerado com sucesso! Todos os dados financeiros foram removidos.');

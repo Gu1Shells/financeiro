@@ -10,14 +10,34 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-center">
-          <WaveLoader
-            bars={7}
-            message="Carregando..."
-            messagePlacement="bottom"
-            className="bg-emerald-500 dark:bg-emerald-400"
-          />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.08),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(16,185,129,0.08),transparent_50%)]"></div>
+
+        <div className="relative z-10 text-center space-y-8">
+          <div className="space-y-4">
+            <WaveLoader
+              bars={7}
+              message=""
+              className="bg-gradient-to-r from-emerald-400 to-teal-400 shadow-lg shadow-emerald-500/50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              Carregando
+            </p>
+            <div className="flex items-center justify-center gap-1">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse delay-100" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse delay-200" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-8 text-center">
+          <p className="text-gray-600 text-sm">Sistema de Gestão Financeira</p>
         </div>
       </div>
     );

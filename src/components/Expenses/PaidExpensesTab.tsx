@@ -12,6 +12,28 @@ export const PaidExpensesTab = () => {
 
   useEffect(() => {
     loadPaidExpenses();
+
+    const channel = supabase
+      .channel('paid-expenses-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses' },
+        () => {
+          loadPaidExpenses();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'installment_payments' },
+        () => {
+          loadPaidExpenses();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadPaidExpenses = async () => {

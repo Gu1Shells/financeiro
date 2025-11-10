@@ -34,12 +34,13 @@ export const MembersTab = () => {
     try {
       const [profilesRes, expensesRes, contributionsRes, installmentsRes] = await Promise.all([
         supabase.from('profiles').select('*'),
-        supabase.from('expenses').select('created_by, total_amount'),
-        supabase.from('payment_contributions').select('user_id, amount'),
+        supabase.from('expenses').select('created_by, total_amount').is('deleted_at', null),
+        supabase.from('payment_contributions').select('user_id, amount, installment_id'),
         supabase
           .from('installment_payments')
-          .select('id, installment_number, amount, due_date, expense_id, expense:expenses!inner(title, id)')
-          .eq('status', 'pending'),
+          .select('id, installment_number, amount, due_date, expense_id, expense:expenses!inner(title, id, deleted_at)')
+          .eq('status', 'pending')
+          .is('expense.deleted_at', null),
       ]);
 
       if (profilesRes.data) {
@@ -48,8 +49,15 @@ export const MembersTab = () => {
             const userExpenses = expensesRes.data?.filter((e) => e.created_by === profile.id) || [];
             const userContributions = contributionsRes.data?.filter((c) => c.user_id === profile.id) || [];
 
+            const { data: validInstallments } = await supabase
+              .from('installment_payments')
+              .select('id');
+
+            const validInstallmentIds = new Set(validInstallments?.map(i => i.id) || []);
+            const validContributions = userContributions.filter(c => validInstallmentIds.has(c.installment_id));
+
             const totalExpenses = userExpenses.reduce((sum, e) => sum + Number(e.total_amount), 0);
-            const totalContributions = userContributions.reduce((sum, c) => sum + Number(c.amount), 0);
+            const totalContributions = validContributions.reduce((sum, c) => sum + Number(c.amount), 0);
 
             const { data: userPaidInstallments } = await supabase
               .from('payment_contributions')

@@ -48,20 +48,13 @@ export const ExpensesTab = ({ onExpenseClick }: ExpensesTabProps) => {
       const { data, error } = await supabase
         .from('expenses')
         .select('*, category:expense_categories(*), creator:profiles!created_by(*)')
-        .in('status', ['active', 'paid'])
+        .eq('status', 'active')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const filteredData = (data || []).filter(expense => {
-        if (expense.is_fixed && expense.status === 'paid') {
-          return false;
-        }
-        return true;
-      });
-
-      setExpenses(filteredData);
+      setExpenses(data || []);
     } catch (error) {
       console.error('Error loading expenses:', error);
     } finally {

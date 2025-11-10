@@ -9,6 +9,7 @@ interface UserStats {
   userName: string;
   totalContributed: number;
   totalExpenses: number;
+  totalOwed: number;
   percentage: number;
 }
 
@@ -62,6 +63,7 @@ export const ReportsTab = () => {
             userName: profile.full_name,
             totalContributed: 0,
             totalExpenses: 0,
+            totalOwed: 0,
             percentage: 0,
           };
         });
@@ -77,6 +79,21 @@ export const ReportsTab = () => {
             userStatsMap[expense.created_by].totalExpenses += Number(expense.total_amount);
           }
         });
+
+        for (const profile of profiles.data) {
+          const { data: pendingDebts } = await supabase
+            .from('user_payment_details')
+            .select('paid_amount')
+            .eq('user_id', profile.id)
+            .eq('user_payment_status', 'pending');
+
+          if (pendingDebts && userStatsMap[profile.id]) {
+            userStatsMap[profile.id].totalOwed = pendingDebts.reduce(
+              (sum, debt) => sum + Number(debt.paid_amount),
+              0
+            );
+          }
+        }
 
         const totalContributions = Object.values(userStatsMap).reduce(
           (sum, user) => sum + user.totalContributed,
@@ -271,20 +288,20 @@ export const ReportsTab = () => {
                         R$ {user.totalContributed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {user.totalExpenses > user.totalContributed ? (
+                        {user.totalOwed > 0 ? (
                           <span className="text-red-600 dark:text-red-400 flex items-center gap-1 justify-end">
                             <TrendingDown className="w-4 h-4" />
-                            Deve R$ {(user.totalExpenses - user.totalContributed).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            Deve R$ {user.totalOwed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                         ) : (
                           <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 justify-end">
                             <TrendingUp className="w-4 h-4" />
-                            Ajudou
+                            Em dia
                           </span>
                         )}
                       </p>
                     </div>
-                    {user.totalExpenses > user.totalContributed && (
+                    {user.totalOwed > 0 && (
                       <button
                         onClick={() => loadDebtDetails(user.userId)}
                         className="px-3 py-1.5 text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"

@@ -224,12 +224,41 @@ export const SettingsTab = () => {
   const handleResetSystem = async () => {
     setResetting(true);
     try {
-      await supabase.from('payment_contributions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('installment_edit_history').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('installment_payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('expense_deletion_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('audit_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      const { error: contribError } = await supabase
+        .from('payment_contributions')
+        .delete()
+        .gte('created_at', '1900-01-01');
+      if (contribError) throw contribError;
+
+      const { error: historyError } = await supabase
+        .from('installment_edit_history')
+        .delete()
+        .gte('edited_at', '1900-01-01');
+      if (historyError) throw historyError;
+
+      const { error: installmentsError } = await supabase
+        .from('installment_payments')
+        .delete()
+        .gte('created_at', '1900-01-01');
+      if (installmentsError) throw installmentsError;
+
+      const { error: deletionLogsError } = await supabase
+        .from('expense_deletion_logs')
+        .delete()
+        .gte('deleted_at', '1900-01-01');
+      if (deletionLogsError) throw deletionLogsError;
+
+      const { error: expensesError } = await supabase
+        .from('expenses')
+        .delete()
+        .gte('created_at', '1900-01-01');
+      if (expensesError) throw expensesError;
+
+      const { error: auditError } = await supabase
+        .from('audit_logs')
+        .delete()
+        .gte('created_at', '1900-01-01');
+      if (auditError) throw auditError;
 
       alert('Sistema zerado com sucesso! Todos os dados financeiros foram removidos.');
       setShowResetModal(false);
@@ -237,7 +266,7 @@ export const SettingsTab = () => {
       window.location.reload();
     } catch (error) {
       console.error('Error resetting system:', error);
-      alert('Erro ao zerar o sistema. Tente novamente.');
+      alert('Erro ao zerar o sistema. Verifique se há dados vinculados ou tente novamente.');
     } finally {
       setResetting(false);
     }

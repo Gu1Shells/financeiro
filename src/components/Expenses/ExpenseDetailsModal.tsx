@@ -113,9 +113,21 @@ export const ExpenseDetailsModal = ({ expense, onClose, onUpdate }: ExpenseDetai
   };
 
   const statusConfig = {
-    pending: { label: 'Pendente', color: 'bg-amber-100 text-amber-700', icon: AlertCircle },
-    partial: { label: 'Parcial', color: 'bg-blue-100 text-blue-700', icon: AlertCircle },
-    paid: { label: 'Pago', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
+    pending: {
+      label: 'Pendente',
+      color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-700',
+      icon: AlertCircle
+    },
+    partial: {
+      label: 'Parcial',
+      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-700',
+      icon: AlertCircle
+    },
+    paid: {
+      label: 'Pago',
+      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-700',
+      icon: CheckCircle
+    },
   };
 
   return (

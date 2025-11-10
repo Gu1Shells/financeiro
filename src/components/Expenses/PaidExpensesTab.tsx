@@ -40,7 +40,7 @@ export const PaidExpensesTab = () => {
           `)
           .eq('status', 'paid')
           .is('expense.deleted_at', null)
-          .order('updated_at', { ascending: false })
+          .order('created_at', { ascending: false })
       ]);
 
       if (expensesRes.error) throw expensesRes.error;
@@ -72,7 +72,7 @@ export const PaidExpensesTab = () => {
     if (!installment.expense || (installment.expense as any).deleted_at) return false;
     if (!startDate && !endDate) return true;
 
-    const installmentDate = new Date(installment.updated_at);
+    const installmentDate = new Date(installment.created_at);
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
 
@@ -269,7 +269,7 @@ export const PaidExpensesTab = () => {
                       {installment.expense?.title || 'Despesa'} - Parcela #{installment.installment_number}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Pago em {new Date(installment.updated_at).toLocaleDateString('pt-BR')}
+                      Pago em {new Date(installment.created_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>

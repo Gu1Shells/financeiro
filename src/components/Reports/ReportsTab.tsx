@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, TrendingDown, Users, PieChart, AlertCircle, Calendar, CreditCard } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, PieChart, AlertCircle, Calendar, CreditCard, User, X } from 'lucide-react';
 import { supabase, Profile } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { PaymentStatusReport } from './PaymentStatusReport';
@@ -19,16 +19,13 @@ interface CategoryStats {
   count: number;
 }
 
-interface MyDebt {
-  expense_id: string;
+interface DebtDetail {
   expense_title: string;
   expense_category: string;
-  installment_id: string;
   installment_number: number;
-  installment_amount: number;
-  paid_amount: number;
-  remaining_amount: number;
+  amount_owed: number;
   due_date: string;
+  creditor_name: string;
   is_late: boolean;
 }
 
@@ -37,9 +34,11 @@ export const ReportsTab = () => {
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
   const [monthlyData, setMonthlyData] = useState<{ month: string; amount: number }[]>([]);
-  const [myDebts, setMyDebts] = useState<MyDebt[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
+  const [showDebtModal, setShowDebtModal] = useState(false);
+  const [selectedUserDebt, setSelectedUserDebt] = useState<string | null>(null);
+  const [debtDetails, setDebtDetails] = useState<DebtDetail[]>([]);
 
   useEffect(() => {
     loadReports();
@@ -48,16 +47,10 @@ export const ReportsTab = () => {
   const loadReports = async () => {
     setLoading(true);
     try {
-      const [profiles, contributions, expenses, myDebtsRes] = await Promise.all([
+      const [profiles, contributions, expenses] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('payment_contributions').select('*, user:profiles(*)'),
         supabase.from('expenses').select('*, category:expense_categories(*)'),
-        user ? supabase
-          .from('user_payment_details')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('user_payment_status', 'pending')
-          .order('due_date', { ascending: true }) : Promise.resolve({ data: [] }),
       ]);
 
       if (profiles.data && contributions.data && expenses.data) {
@@ -135,26 +128,56 @@ export const ReportsTab = () => {
 
         setMonthlyData(sortedMonthly);
       }
-
-      if (myDebtsRes.data) {
-        const debts: MyDebt[] = myDebtsRes.data.map((debt: any) => ({
-          expense_id: debt.expense_id,
-          expense_title: debt.expense_title,
-          expense_category: debt.expense_category,
-          installment_id: debt.installment_id,
-          installment_number: debt.installment_number,
-          installment_amount: Number(debt.installment_amount),
-          paid_amount: Number(debt.paid_amount),
-          remaining_amount: Number(debt.installment_amount) - Number(debt.paid_amount),
-          due_date: debt.due_date,
-          is_late: new Date(debt.due_date) < new Date(),
-        }));
-        setMyDebts(debts);
-      }
     } catch (error) {
       console.error('Error loading reports:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDebtDetails = async (userId: string) => {
+    try {
+      const { data: pendingContributions } = await supabase
+        .from('user_payment_details')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('user_payment_status', 'pending')
+        .order('due_date', { ascending: true });
+
+      if (!pendingContributions) return;
+
+      const details: DebtDetail[] = [];
+
+      for (const contrib of pendingContributions) {
+        const { data: allContributions } = await supabase
+          .from('payment_contributions')
+          .select('user_id, paid_at, amount, user:profiles(full_name)')
+          .eq('installment_id', contrib.installment_id);
+
+        if (allContributions) {
+          const paidContributions = allContributions.filter(c => c.paid_at !== null);
+
+          paidContributions.forEach((paidContrib: any) => {
+            if (paidContrib.user_id !== userId) {
+              details.push({
+                expense_title: contrib.expense_title,
+                expense_category: contrib.expense_category,
+                installment_number: contrib.installment_number,
+                amount_owed: Number(contrib.paid_amount),
+                due_date: contrib.due_date,
+                creditor_name: paidContrib.user.full_name,
+                is_late: new Date(contrib.due_date) < new Date(),
+              });
+            }
+          });
+        }
+      }
+
+      setDebtDetails(details);
+      setSelectedUserDebt(userId);
+      setShowDebtModal(true);
+    } catch (error) {
+      console.error('Error loading debt details:', error);
     }
   };
 
@@ -175,85 +198,6 @@ export const ReportsTab = () => {
       <div className="border-t-4 border-gray-200 dark:border-gray-700 my-8"></div>
 
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Estatísticas Gerais</h2>
-
-      {myDebts.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-gradient-to-br from-red-500 to-rose-600 p-3 rounded-lg">
-              <AlertCircle className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Minhas Dívidas</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {myDebts.length} parcela{myDebts.length !== 1 ? 's' : ''} pendente{myDebts.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <div className="ml-auto text-right">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total a pagar</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                R$ {myDebts.reduce((sum, d) => sum + d.remaining_amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {myDebts.slice(0, 5).map((debt) => (
-              <div
-                key={debt.installment_id}
-                className={`p-4 rounded-lg border-2 ${
-                  debt.is_late
-                    ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
-                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-gray-800 dark:text-white">{debt.expense_title}</h4>
-                      {debt.is_late && (
-                        <span className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 px-2 py-0.5 rounded-full font-medium">
-                          ATRASADA
-                        </span>
-                      )}
-                      <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium border border-blue-200 dark:border-blue-700">
-                        {debt.expense_category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <CreditCard className="w-4 h-4" />
-                        Parcela #{debt.installment_number}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        Venc: {new Date(debt.due_date).toLocaleDateString('pt-BR')}
-                      </span>
-                      {debt.is_late && (
-                        <span className="text-red-600 dark:text-red-400 font-medium">
-                          {Math.floor((new Date().getTime() - new Date(debt.due_date).getTime()) / (1000 * 60 * 60 * 24))} dias
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right ml-4">
-                    <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                      R$ {debt.remaining_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      de R$ {debt.installment_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {myDebts.length > 5 && (
-              <p className="text-center text-sm text-gray-600 dark:text-gray-400 pt-2">
-                + {myDebts.length - 5} parcela{myDebts.length - 5 !== 1 ? 's' : ''} adicional{myDebts.length - 5 !== 1 ? 'is' : ''}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="flex gap-2">
         <button
@@ -321,23 +265,33 @@ export const ReportsTab = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-400">{user.percentage.toFixed(1)}% do total</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-800 dark:text-white">
-                      R$ {user.totalContributed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {user.totalExpenses > user.totalContributed ? (
-                        <span className="text-red-600 dark:text-red-400 flex items-center gap-1 justify-end">
-                          <TrendingDown className="w-4 h-4" />
-                          Deve
-                        </span>
-                      ) : (
-                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 justify-end">
-                          <TrendingUp className="w-4 h-4" />
-                          Ajudou
-                        </span>
-                      )}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="font-bold text-gray-800 dark:text-white">
+                        R$ {user.totalContributed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {user.totalExpenses > user.totalContributed ? (
+                          <span className="text-red-600 dark:text-red-400 flex items-center gap-1 justify-end">
+                            <TrendingDown className="w-4 h-4" />
+                            Deve R$ {(user.totalExpenses - user.totalContributed).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 justify-end">
+                            <TrendingUp className="w-4 h-4" />
+                            Ajudou
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {user.totalExpenses > user.totalContributed && (
+                      <button
+                        onClick={() => loadDebtDetails(user.userId)}
+                        className="px-3 py-1.5 text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                      >
+                        Ver Detalhes
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
@@ -426,6 +380,119 @@ export const ReportsTab = () => {
           ))}
         </div>
       </div>
+
+      {showDebtModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-red-500 to-rose-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Detalhes da Dívida</h2>
+                  <p className="text-red-100 mt-1">
+                    {debtDetails.length} parcela{debtDetails.length !== 1 ? 's' : ''} pendente{debtDetails.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDebtModal(false)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {debtDetails.length === 0 ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                  <p className="text-lg font-semibold text-gray-700 dark:text-white">Nenhuma dívida pendente</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Você está em dia com todos os pagamentos!
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-red-800 dark:text-red-200 font-medium">Total a pagar</p>
+                        <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">
+                          R$ {debtDetails.reduce((sum, d) => sum + d.amount_owed, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <AlertCircle className="w-12 h-12 text-red-500" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {debtDetails.map((debt, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg border-2 ${
+                          debt.is_late
+                            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                            : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-gray-800 dark:text-white">
+                                {debt.expense_title}
+                              </h4>
+                              {debt.is_late && (
+                                <span className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 px-2 py-0.5 rounded-full font-medium">
+                                  ATRASADA
+                                </span>
+                              )}
+                              <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium border border-blue-200 dark:border-blue-700">
+                                {debt.expense_category}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <CreditCard className="w-4 h-4" />
+                                Parcela #{debt.installment_number}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                Venc: {new Date(debt.due_date).toLocaleDateString('pt-BR')}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <User className="w-4 h-4" />
+                                Deve para: <span className="font-semibold text-gray-800 dark:text-white">{debt.creditor_name}</span>
+                              </span>
+                            </div>
+                            {debt.is_late && (
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">
+                                ⚠️ Atrasada há {Math.floor((new Date().getTime() - new Date(debt.due_date).getTime()) / (1000 * 60 * 60 * 24))} dias
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                              R$ {debt.amount_owed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <button
+                onClick={() => setShowDebtModal(false)}
+                className="w-full py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

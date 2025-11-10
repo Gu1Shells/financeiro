@@ -81,17 +81,20 @@ export const ReportsTab = () => {
         });
 
         for (const profile of profiles.data) {
-          const { data: pendingDebts } = await supabase
+          const { data: allDebts } = await supabase
             .from('user_payment_details')
-            .select('paid_amount')
-            .eq('user_id', profile.id)
-            .eq('user_payment_status', 'pending');
+            .select('user_share_amount, paid_amount, user_payment_status, installment_status')
+            .eq('user_id', profile.id);
 
-          if (pendingDebts && userStatsMap[profile.id]) {
-            userStatsMap[profile.id].totalOwed = pendingDebts.reduce(
-              (sum, debt) => sum + Number(debt.paid_amount),
+          if (allDebts && userStatsMap[profile.id]) {
+            const paidInstallments = allDebts.filter(d => d.installment_status === 'paid');
+
+            const totalShouldPayForPaidInstallments = paidInstallments.reduce(
+              (sum, debt) => sum + Number(debt.user_share_amount),
               0
             );
+            const totalAlreadyPaid = userStatsMap[profile.id].totalContributed;
+            userStatsMap[profile.id].totalOwed = Math.max(0, totalShouldPayForPaidInstallments - totalAlreadyPaid);
           }
         }
 

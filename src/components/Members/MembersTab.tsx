@@ -143,7 +143,7 @@ export const MembersTab = () => {
                   <img
                     src={member.profile_photo_url}
                     alt={member.full_name}
-                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
                   />
                 ) : (
                   <div
@@ -159,8 +159,8 @@ export const MembersTab = () => {
                   </div>
                 )}
                 <div>
-                  <h3 className="font-bold text-gray-800 text-lg">{member.full_name}</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="font-bold text-gray-800 dark:text-white text-lg">{member.full_name}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {index === 0 ? 'Maior Contribuinte' : 'Sócio'}
                   </p>
                 </div>
@@ -168,32 +168,32 @@ export const MembersTab = () => {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100 dark:border-emerald-800">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-medium text-gray-700">Contribuições</span>
+                  <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Contribuições</span>
                 </div>
-                <span className="font-bold text-emerald-600">
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
                   R$ {member.totalContributions.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700">Despesas</span>
+                  <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Despesas</span>
                 </div>
-                <span className="font-bold text-blue-600">
+                <span className="font-bold text-blue-600 dark:text-blue-400">
                   R$ {member.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Despesas Criadas</span>
+                  <TrendingUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Despesas Criadas</span>
                 </div>
-                <span className="font-bold text-gray-800">{member.expenseCount}</span>
+                <span className="font-bold text-gray-800 dark:text-white">{member.expenseCount}</span>
               </div>
 
               <div

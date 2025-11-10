@@ -62,11 +62,11 @@ export const PaymentStatusReport = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [summaryRes, statusRes, profilesRes, expensesRes] = await Promise.all([
+      const [summaryRes, statusRes, profilesRes, categoriesRes] = await Promise.all([
         supabase.from('user_debt_summary').select('*'),
-        supabase.from('installment_payment_status').select('*'),
+        supabase.from('user_payment_details').select('*'),
         supabase.from('profiles').select('id, profile_photo_url'),
-        supabase.from('expenses').select('category').order('category'),
+        supabase.from('expense_categories').select('name').order('name'),
       ]);
 
       if (summaryRes.data && profilesRes.data) {
@@ -81,8 +81,8 @@ export const PaymentStatusReport = () => {
       }
       if (statusRes.data) setDetailedStatus(statusRes.data);
 
-      if (expensesRes.data) {
-        const uniqueCategories = [...new Set(expensesRes.data.map(e => e.category))].filter(Boolean);
+      if (categoriesRes.data) {
+        const uniqueCategories = categoriesRes.data.map(c => c.name).filter(Boolean);
         setCategories(uniqueCategories as string[]);
       }
     } catch (error) {

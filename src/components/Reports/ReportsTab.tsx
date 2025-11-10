@@ -159,39 +159,44 @@ export const ReportsTab = () => {
 
   const loadDebtDetails = async (userId: string) => {
     try {
-      const { data: pendingContributions } = await supabase
+      const { data: profiles } = await supabase.from('profiles').select('id');
+      const totalMembers = profiles?.length || 1;
+
+      const { data: paidInstallments } = await supabase
         .from('user_payment_details')
         .select('*')
         .eq('user_id', userId)
+        .eq('installment_status', 'paid')
         .eq('user_payment_status', 'pending')
         .order('due_date', { ascending: true });
 
-      if (!pendingContributions) return;
+      if (!paidInstallments) return;
 
       const details: DebtDetail[] = [];
 
-      for (const contrib of pendingContributions) {
+      for (const installment of paidInstallments) {
         const { data: allContributions } = await supabase
           .from('payment_contributions')
           .select('user_id, paid_at, amount, user:profiles(full_name)')
-          .eq('installment_id', contrib.installment_id);
+          .eq('installment_id', installment.installment_id)
+          .not('paid_at', 'is', null);
 
-        if (allContributions) {
-          const paidContributions = allContributions.filter(c => c.paid_at !== null);
+        if (allContributions && allContributions.length > 0) {
+          const userShare = Number(installment.installment_amount) / totalMembers;
 
-          paidContributions.forEach((paidContrib: any) => {
-            if (paidContrib.user_id !== userId) {
-              details.push({
-                expense_title: contrib.expense_title,
-                expense_category: contrib.expense_category,
-                installment_number: contrib.installment_number,
-                amount_owed: Number(contrib.paid_amount),
-                due_date: contrib.due_date,
-                creditor_name: paidContrib.user.full_name,
-                is_late: new Date(contrib.due_date) < new Date(),
-              });
-            }
-          });
+          const otherContributors = allContributions.filter(c => c.user_id !== userId);
+
+          if (otherContributors.length > 0) {
+            details.push({
+              expense_title: installment.expense_title,
+              expense_category: installment.expense_category,
+              installment_number: installment.installment_number,
+              amount_owed: userShare,
+              due_date: installment.due_date,
+              creditor_name: otherContributors.map((c: any) => c.user.full_name).join(', '),
+              is_late: new Date(installment.due_date) < new Date(),
+            });
+          }
         }
       }
 

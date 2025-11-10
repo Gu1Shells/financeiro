@@ -3,16 +3,21 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { AuthPage } from './components/Auth/AuthPage';
 import { Dashboard } from './components/Dashboard/Dashboard';
+import { WaveLoader } from './components/ui/wave-loader';
 
 const AppContent = () => {
   const { user, loading, error } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Carregando...</p>
+          <WaveLoader
+            bars={7}
+            message="Carregando..."
+            messagePlacement="bottom"
+            className="bg-emerald-500 dark:bg-emerald-400"
+          />
         </div>
       </div>
     );

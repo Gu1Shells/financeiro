@@ -9,6 +9,7 @@ export default {
           750: '#2d3748',
           850: '#1a202c',
         },
+        foreground: '#000000',
       },
     },
   },

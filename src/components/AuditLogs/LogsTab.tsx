@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Filter, Plus, Pencil, Trash2, Calendar } from 'lucide-react';
+import { FileText, Filter, Plus, Pencil, Trash2, Calendar, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { supabase, AuditLog } from '../../lib/supabase';
 
 export const LogsTab = () => {
@@ -8,6 +8,7 @@ export const LogsTab = () => {
   const [filterAction, setFilterAction] = useState<string>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
   useEffect(() => {
     loadLogs();
@@ -186,34 +187,74 @@ export const LogsTab = () => {
             {filteredLogs.map((log) => (
               <div
                 key={log.id}
-                className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-750 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition"
+                className="bg-gray-50 dark:bg-gray-750 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition"
               >
-                <div className={`p-2 rounded-lg ${getActionColor(log.action)}`}>
-                  {getActionIcon(log.action)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded ${getActionColor(log.action)}`}>
-                      {getActionLabel(log.action)}
-                    </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {log.user?.full_name || 'Sistema'}
-                    </span>
+                <div className="flex items-start gap-4 p-4">
+                  <div className={`p-2 rounded-lg ${getActionColor(log.action)}`}>
+                    {getActionIcon(log.action)}
                   </div>
-                  <p className="text-sm text-gray-800 dark:text-white mb-1">{log.description}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <Calendar className="w-3 h-3" />
-                    <span>
-                      {new Date(log.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded ${getActionColor(log.action)}`}>
+                        {getActionLabel(log.action)}
+                      </span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {log.user?.full_name || 'Sistema'}
+                      </span>
+                      {log.table_name && (
+                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
+                          {log.table_name}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-800 dark:text-white mb-2">{log.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <Calendar className="w-3 h-3" />
+                        <span>
+                          {new Date(log.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      {log.metadata && Object.keys(log.metadata).length > 0 && (
+                        <button
+                          onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
+                          className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <Info className="w-3 h-3" />
+                          <span>Ver detalhes</span>
+                          {expandedLog === log.id ? (
+                            <ChevronUp className="w-3 h-3" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+                {expandedLog === log.id && log.metadata && (
+                  <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Detalhes da Ação:</h4>
+                    <div className="bg-white dark:bg-gray-800 rounded p-3 space-y-1">
+                      {Object.entries(log.metadata).map(([key, value]) => (
+                        <div key={key} className="flex items-start gap-2 text-xs">
+                          <span className="font-medium text-gray-600 dark:text-gray-400 min-w-[120px]">
+                            {key}:
+                          </span>
+                          <span className="text-gray-800 dark:text-white break-all">
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

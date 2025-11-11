@@ -38,6 +38,8 @@ export const OverviewTab = () => {
   const [upcomingPayments, setUpcomingPayments] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationsRead, setNotificationsRead] = useState(false);
+  const [newExpenses, setNewExpenses] = useState<any[]>([]);
+  const [overdueInstallments, setOverdueInstallments] = useState<any[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -125,6 +127,44 @@ export const OverviewTab = () => {
         .limit(5);
 
       setUpcomingPayments(upcoming || []);
+
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(today.getDate() - 3);
+
+      const { data: recentExpenses } = await supabase
+        .from('expenses')
+        .select('*, creator:profiles!created_by(full_name), category:expense_categories(*)')
+        .gte('created_at', threeDaysAgo.toISOString())
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      setNewExpenses(recentExpenses || []);
+
+      const { data: overdue } = await supabase
+        .from('installment_payments')
+        .select(`
+          *,
+          expense:expenses!inner(title, category:expense_categories(*)),
+          contributions:payment_contributions(user_id)
+        `)
+        .eq('status', 'pending')
+        .lt('due_date', today.toISOString().split('T')[0])
+        .order('due_date', { ascending: true })
+        .limit(10);
+
+      const { data: allProfiles } = await supabase.from('profiles').select('id, full_name');
+      const profilesMap = new Map(allProfiles?.map(p => [p.id, p.full_name]) || []);
+
+      const overdueWithPending = (overdue || []).map(inst => {
+        const paidUserIds = new Set(inst.contributions?.map((c: any) => c.user_id) || []);
+        const pendingUsers = Array.from(profilesMap.entries())
+          .filter(([id]) => !paidUserIds.has(id))
+          .map(([, name]) => name);
+        return { ...inst, pendingUsers };
+      });
+
+      setOverdueInstallments(overdueWithPending);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -155,53 +195,109 @@ export const OverviewTab = () => {
             onClick={handleBellClick}
             className="relative p-3 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition shadow-md"
           >
-            <Bell className={`w-6 h-6 ${!notificationsRead && upcomingPayments.length > 0 ? 'animate-bell-ring' : ''}`} />
-            {upcomingPayments.length > 0 && (
+            <Bell className={`w-6 h-6 ${!notificationsRead && (upcomingPayments.length > 0 || newExpenses.length > 0 || overdueInstallments.length > 0) ? 'animate-bell-ring' : ''}`} />
+            {(upcomingPayments.length + newExpenses.length + overdueInstallments.length) > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {upcomingPayments.length}
+                {upcomingPayments.length + newExpenses.length + overdueInstallments.length}
               </span>
             )}
           </button>
           {showNotifications && (
-            <div className="absolute top-full mt-2 left-0 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 w-80 z-50">
-              <h4 className="font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
+            <div className="absolute top-full mt-2 left-0 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 w-96 z-50 max-h-[600px] overflow-y-auto">
+              <h4 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2 sticky top-0 bg-white dark:bg-gray-800 pb-2">
                 <Bell className="w-5 h-5 text-amber-500" />
-                Vencimentos Próximos
+                Notificações
               </h4>
-              {upcomingPayments.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-400 text-sm text-center py-4">
-                  Nenhum pagamento nos próximos 7 dias
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {upcomingPayments.map((payment) => {
-                    const daysUntilDue = Math.ceil((new Date(payment.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    const isUrgent = daysUntilDue <= 3;
 
-                    return (
-                      <div
-                        key={payment.id}
-                        className={`p-3 rounded-lg border-2 ${
-                          isUrgent
-                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                            : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                        }`}
-                      >
+              {newExpenses.length > 0 && (
+                <div className="mb-4">
+                  <h5 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">Novas Despesas</h5>
+                  <div className="space-y-2">
+                    {newExpenses.map((expense) => (
+                      <div key={expense.id} className="p-3 rounded-lg border-2 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
                         <p className="font-semibold text-gray-800 dark:text-white text-sm">
-                          {payment.expense?.title}
+                          {expense.title}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          Parcela {payment.installment_number} • R$ {Number(payment.amount).toFixed(2)}
+                          Por {expense.creator?.full_name} • R$ {Number(expense.total_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
-                        <p className={`text-xs font-bold mt-1 ${
-                          isUrgent ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'
-                        }`}>
-                          {daysUntilDue === 0 ? 'Vence hoje!' : `Vence em ${daysUntilDue} dia${daysUntilDue > 1 ? 's' : ''}`}
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                          {new Date(expense.created_at).toLocaleDateString('pt-BR')} às {new Date(expense.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              {overdueInstallments.length > 0 && (
+                <div className="mb-4">
+                  <h5 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2">Parcelas Vencidas</h5>
+                  <div className="space-y-2">
+                    {overdueInstallments.slice(0, 5).map((installment) => {
+                      const daysOverdue = Math.ceil((new Date().getTime() - new Date(installment.due_date).getTime()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <div key={installment.id} className="p-3 rounded-lg border-2 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                          <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                            {installment.expense?.title}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            Parcela {installment.installment_number} • R$ {Number(installment.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                          <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">
+                            Vencida há {daysOverdue} dia{daysOverdue > 1 ? 's' : ''}
+                          </p>
+                          {installment.pendingUsers && installment.pendingUsers.length > 0 && (
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              Faltam: {installment.pendingUsers.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {upcomingPayments.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-2">Vencimentos Próximos (7 dias)</h5>
+                  <div className="space-y-2">
+                    {upcomingPayments.map((payment) => {
+                      const daysUntilDue = Math.ceil((new Date(payment.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                      const isUrgent = daysUntilDue <= 3;
+
+                      return (
+                        <div
+                          key={payment.id}
+                          className={`p-3 rounded-lg border-2 ${
+                            isUrgent
+                              ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                              : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                          }`}
+                        >
+                          <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                            {payment.expense?.title}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            Parcela {payment.installment_number} • R$ {Number(payment.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                          <p className={`text-xs font-bold mt-1 ${
+                            isUrgent ? 'text-orange-600 dark:text-orange-400' : 'text-amber-600 dark:text-amber-400'
+                          }`}>
+                            {daysUntilDue === 0 ? 'Vence hoje!' : `Vence em ${daysUntilDue} dia${daysUntilDue > 1 ? 's' : ''}`}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {newExpenses.length === 0 && overdueInstallments.length === 0 && upcomingPayments.length === 0 && (
+                <p className="text-gray-600 dark:text-gray-400 text-sm text-center py-4">
+                  Nenhuma notificação no momento
+                </p>
               )}
             </div>
           )}

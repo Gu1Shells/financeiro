@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Wallet, TrendingDown, AlertCircle, CheckCircle, Home, Droplet, Zap, Tv, Armchair, UtensilsCrossed, Wifi, Wrench, Tag, Calendar as CalendarIcon, Bell } from 'lucide-react';
+import { Wallet, TrendingDown, AlertCircle, CheckCircle, Home, Droplet, Zap, Tv, Armchair, UtensilsCrossed, Wifi, Wrench, Tag, Calendar as CalendarIcon, Bell, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { StatsCard } from './StatsCard';
 import { useAuth } from '../../contexts/AuthContext';
@@ -116,47 +116,53 @@ export const OverviewTab = () => {
       const today = new Date();
       const next7Days = new Date();
       next7Days.setDate(today.getDate() + 7);
-
-      const { data: upcoming } = await supabase
-        .from('installment_payments')
-        .select('*, expense:expenses!inner(title, category:expense_categories(*))')
-        .eq('status', 'pending')
-        .gte('due_date', today.toISOString().split('T')[0])
-        .lte('due_date', next7Days.toISOString().split('T')[0])
-        .order('due_date', { ascending: true })
-        .limit(5);
-
-      setUpcomingPayments(upcoming || []);
-
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(today.getDate() - 3);
 
-      const { data: recentExpenses } = await supabase
-        .from('expenses')
-        .select('*, creator:profiles!created_by(full_name), category:expense_categories(*)')
-        .gte('created_at', threeDaysAgo.toISOString())
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const [upcomingRes, recentExpensesRes, overdueRes, profilesRes, viewedRes] = await Promise.all([
+        supabase
+          .from('installment_payments')
+          .select(`
+            *,
+            expense:expenses!inner(title, category:expense_categories(*)),
+            contributions:payment_contributions(user_id)
+          `)
+          .eq('status', 'pending')
+          .gte('due_date', today.toISOString().split('T')[0])
+          .lte('due_date', next7Days.toISOString().split('T')[0])
+          .order('due_date', { ascending: true })
+          .limit(10),
+        supabase
+          .from('expenses')
+          .select('*, creator:profiles!created_by(full_name), category:expense_categories(*)')
+          .gte('created_at', threeDaysAgo.toISOString())
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('installment_payments')
+          .select(`
+            *,
+            expense:expenses!inner(title, category:expense_categories(*)),
+            contributions:payment_contributions(user_id)
+          `)
+          .eq('status', 'pending')
+          .lt('due_date', today.toISOString().split('T')[0])
+          .order('due_date', { ascending: true })
+          .limit(10),
+        supabase.from('profiles').select('id, full_name'),
+        supabase
+          .from('notification_views')
+          .select('notification_type, reference_id')
+          .eq('user_id', user.id)
+      ]);
 
-      setNewExpenses(recentExpenses || []);
+      const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p.full_name]) || []);
+      const viewedSet = new Set(
+        viewedRes.data?.map(v => `${v.notification_type}_${v.reference_id}`) || []
+      );
 
-      const { data: overdue } = await supabase
-        .from('installment_payments')
-        .select(`
-          *,
-          expense:expenses!inner(title, category:expense_categories(*)),
-          contributions:payment_contributions(user_id)
-        `)
-        .eq('status', 'pending')
-        .lt('due_date', today.toISOString().split('T')[0])
-        .order('due_date', { ascending: true })
-        .limit(10);
-
-      const { data: allProfiles } = await supabase.from('profiles').select('id, full_name');
-      const profilesMap = new Map(allProfiles?.map(p => [p.id, p.full_name]) || []);
-
-      const overdueWithPending = (overdue || []).map(inst => {
+      const upcomingWithPending = (upcomingRes.data || []).map(inst => {
         const paidUserIds = new Set(inst.contributions?.map((c: any) => c.user_id) || []);
         const pendingUsers = Array.from(profilesMap.entries())
           .filter(([id]) => !paidUserIds.has(id))
@@ -164,7 +170,31 @@ export const OverviewTab = () => {
         return { ...inst, pendingUsers };
       });
 
-      setOverdueInstallments(overdueWithPending);
+      const unviewedUpcoming = upcomingWithPending.filter(
+        inst => !viewedSet.has(`upcoming_payment_${inst.id}`)
+      );
+
+      setUpcomingPayments(unviewedUpcoming);
+
+      const unviewedExpenses = (recentExpensesRes.data || []).filter(
+        exp => !viewedSet.has(`new_expense_${exp.id}`)
+      );
+
+      setNewExpenses(unviewedExpenses);
+
+      const overdueWithPending = (overdueRes.data || []).map(inst => {
+        const paidUserIds = new Set(inst.contributions?.map((c: any) => c.user_id) || []);
+        const pendingUsers = Array.from(profilesMap.entries())
+          .filter(([id]) => !paidUserIds.has(id))
+          .map(([, name]) => name);
+        return { ...inst, pendingUsers };
+      });
+
+      const unviewedOverdue = overdueWithPending.filter(
+        inst => !viewedSet.has(`overdue_payment_${inst.id}`)
+      );
+
+      setOverdueInstallments(unviewedOverdue);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -176,6 +206,28 @@ export const OverviewTab = () => {
     setShowNotifications(!showNotifications);
     if (!showNotifications) {
       setNotificationsRead(true);
+    }
+  };
+
+  const dismissNotification = async (type: string, referenceId: string) => {
+    if (!user) return;
+
+    try {
+      await supabase.from('notification_views').insert({
+        user_id: user.id,
+        notification_type: type,
+        reference_id: referenceId,
+      });
+
+      if (type === 'new_expense') {
+        setNewExpenses(prev => prev.filter(exp => exp.id !== referenceId));
+      } else if (type === 'overdue_payment') {
+        setOverdueInstallments(prev => prev.filter(inst => inst.id !== referenceId));
+      } else if (type === 'upcoming_payment') {
+        setUpcomingPayments(prev => prev.filter(inst => inst.id !== referenceId));
+      }
+    } catch (error) {
+      console.error('Error dismissing notification:', error);
     }
   };
 
@@ -214,8 +266,15 @@ export const OverviewTab = () => {
                   <h5 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">Novas Despesas</h5>
                   <div className="space-y-2">
                     {newExpenses.map((expense) => (
-                      <div key={expense.id} className="p-3 rounded-lg border-2 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
-                        <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                      <div key={expense.id} className="relative p-3 rounded-lg border-2 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+                        <button
+                          onClick={() => dismissNotification('new_expense', expense.id)}
+                          className="absolute top-2 right-2 p-1 hover:bg-emerald-200 dark:hover:bg-emerald-800 rounded transition"
+                          title="Marcar como visualizada"
+                        >
+                          <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                        </button>
+                        <p className="font-semibold text-gray-800 dark:text-white text-sm pr-6">
                           {expense.title}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -237,8 +296,15 @@ export const OverviewTab = () => {
                     {overdueInstallments.slice(0, 5).map((installment) => {
                       const daysOverdue = Math.ceil((new Date().getTime() - new Date(installment.due_date).getTime()) / (1000 * 60 * 60 * 24));
                       return (
-                        <div key={installment.id} className="p-3 rounded-lg border-2 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-                          <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                        <div key={installment.id} className="relative p-3 rounded-lg border-2 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                          <button
+                            onClick={() => dismissNotification('overdue_payment', installment.id)}
+                            className="absolute top-2 right-2 p-1 hover:bg-red-200 dark:hover:bg-red-800 rounded transition"
+                            title="Marcar como visualizada"
+                          >
+                            <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                          </button>
+                          <p className="font-semibold text-gray-800 dark:text-white text-sm pr-6">
                             {installment.expense?.title}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -270,13 +336,24 @@ export const OverviewTab = () => {
                       return (
                         <div
                           key={payment.id}
-                          className={`p-3 rounded-lg border-2 ${
+                          className={`relative p-3 rounded-lg border-2 ${
                             isUrgent
                               ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
                               : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
                           }`}
                         >
-                          <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                          <button
+                            onClick={() => dismissNotification('upcoming_payment', payment.id)}
+                            className={`absolute top-2 right-2 p-1 rounded transition ${
+                              isUrgent
+                                ? 'hover:bg-orange-200 dark:hover:bg-orange-800'
+                                : 'hover:bg-amber-200 dark:hover:bg-amber-800'
+                            }`}
+                            title="Marcar como visualizada"
+                          >
+                            <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                          </button>
+                          <p className="font-semibold text-gray-800 dark:text-white text-sm pr-6">
                             {payment.expense?.title}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -287,6 +364,11 @@ export const OverviewTab = () => {
                           }`}>
                             {daysUntilDue === 0 ? 'Vence hoje!' : `Vence em ${daysUntilDue} dia${daysUntilDue > 1 ? 's' : ''}`}
                           </p>
+                          {payment.pendingUsers && payment.pendingUsers.length > 0 && (
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              Faltam pagar: {payment.pendingUsers.join(', ')}
+                            </p>
+                          )}
                         </div>
                       );
                     })}
